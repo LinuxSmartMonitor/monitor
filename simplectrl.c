@@ -168,8 +168,7 @@ void * mainPhase(void *arg){
          perror("Error: failed to map framebuffer device to memory");
          exit(4);
      }
-     printf("The framebuffer device was mapped to memory successfully.\n");
-
+   printf("The framebuffer device was mapped to memory successfully.\n");
 
 
 
