@@ -23,36 +23,60 @@ int main(void)
 {
 	FILE *fp;
 	int fd;
+
 	int format;
 	int stereo;
 	int Rate;
 	int status;
+
+	int arg;
 	
 	fp = fopen("sound", "w");
-
 	if( (fd = open("/dev/dsp", O_RDWR, 0) ) == -1)
 	{
 		perror("OSS : error opening Device\n");
 		return;
 	}
+//*****************************************************************
+	//sample size
+	arg = SIZE;
+	status = ioctl(fd, SOUND_PCM_WRITE_BITS, &arg);
+	if(status1 == -1)
+		perror("SOUND_PCM_WRITE_BITS ioctl failed");
+	if(arg != SIZE)
+		perror("unable to set sample size");
 
+	//mono or stereo
+	arg = CHANNELS;
+	status = ioctl(fd, SOUND_PCM_WRITE_CHANNELS, &arg);
+	if(status == -1)
+		perror("SOUND_PCM_WRITE_BITS ioctl failed");
+	if(arg != SIZE)
+		perror("unable to set sample size");
+
+
+	//sampling rate
+	arg = RATE;
+	status = ioctl(fd, SOUND_PCM_WRITE_CHANNELS, &arg);
+	if(status == -1)
+		perror("SOUND_PCM_WRITE ioctl failed");
 
 	format = AFMT_S16_LE;
-	if( ioctl(fd, SNDCTL_DSP_SETFMT, &format) == -1)
+	if( ioctl(fd, SNDCTL_DSP_SETFMT, format) == -1)
 	{
 		perror("SOUND_PCM_SETFMT");
 		return -1;
 	}
 
-	stereo = 2;	//mono = 1, stereo = 2;
-	if( ioctl(fd, SNDCTL_DSP_CHANNELS, &stereo) == -1)
+	stereo = 2;	//mono = 1, stereo = 2; ***
+	if( ioctl(fd, SNDCTL_DSP_CHANNELS, stereo) == -1)
 	{
 		perror("SOUND_PCM_CHANNELS");
 		return -1;
 	}
 
 	Rate = 8000;
-	if(ioctl(fd, SNDCTL_DSP_SPEED, &Rate) == -1)
+	if(ioctl(fd, SNDCTL_DSP_SPEED, Rate) == -1)
 	{
 		perror("SOUND_PCM_SPEED");
 		return -1;
@@ -65,6 +89,7 @@ int main(void)
 	}
 	
 	while(1)	{
+		
 		//사운드 입력받기 위해서는 파일을 읽는 것과마 찬가지로 read()를 사용하낟.
 		if((status = read(fd, Buf, count)) == -1)
 		{
@@ -82,6 +107,7 @@ int main(void)
 	
 		printf("%s\n", Buf);
 		fprintf(fp, "%s", Buf);
+		
 	}
 
 	fclose(fp);

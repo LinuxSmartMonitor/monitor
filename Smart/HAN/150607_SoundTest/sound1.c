@@ -27,14 +27,38 @@ int main(void)
 	int stereo;
 	int Rate;
 	int status;
+
+	int arg;
 	
-	fp = fopen("sound", "w");
+	fp = fopen("sound.wav", "w");
 
 	if( (fd = open("/dev/dsp", O_RDWR, 0) ) == -1)
 	{
 		perror("OSS : error opening Device\n");
 		return;
 	}
+
+	//sample size
+	arg = SIZE;
+	status = ioctl(fd, SOUND_PCM_WRITE_BITS, &arg);
+	if(status == -1)
+		perror("SOUND_PCM_WRITE_BITS ioctl failed");
+	if(arg != SIZE)
+		perror("unable to set sample size");
+
+	//mono or stereo
+	arg = CHANNELS;
+	status = ioctl(fd, SOUND_PCM_WRITE_CHANNELS, &arg);
+	if(status == -1)
+		perror("SOUND_PCM_WRITE_CHANNELS ioctl failed");
+	if(arg != CHANNELS)
+		perror("unable to set number of channels");
+
+	//sampling rate
+	arg = RATE;
+	status = ioctl(fd, SOUND_PCM_WRITE_RATE, &arg);
+	if(status == -1)
+		perror("SOUND_PCM_WRITE ioctl failed");	//
 
 
 	format = AFMT_S16_LE;
@@ -43,15 +67,15 @@ int main(void)
 		perror("SOUND_PCM_SETFMT");
 		return -1;
 	}
-
-	stereo = 2;	//mono = 1, stereo = 2;
+/*
+	stereo = 2;	//mono = 1, stereo = 2; ***
 	if( ioctl(fd, SNDCTL_DSP_CHANNELS, &stereo) == -1)
 	{
 		perror("SOUND_PCM_CHANNELS");
 		return -1;
 	}
-
-	Rate = 8000;
+*/
+	Rate = RATE;
 	if(ioctl(fd, SNDCTL_DSP_SPEED, &Rate) == -1)
 	{
 		perror("SOUND_PCM_SPEED");

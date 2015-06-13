@@ -38,21 +38,21 @@ int main(void)
 
 
 	format = AFMT_S16_LE;
-	if( ioctl(fd, SNDCTL_DSP_SETFMT, &format) == -1)
+	if( ioctl(fd, SNDCTL_DSP_SETFMT, format) == -1)
 	{
 		perror("SOUND_PCM_SETFMT");
 		return -1;
 	}
 
 	stereo = 2;	//mono = 1, stereo = 2;
-	if( ioctl(fd, SNDCTL_DSP_CHANNELS, &stereo) == -1)
+	if( ioctl(fd, SNDCTL_DSP_CHANNELS, stereo) == -1)
 	{
 		perror("SOUND_PCM_CHANNELS");
 		return -1;
 	}
 
 	Rate = 8000;
-	if(ioctl(fd, SNDCTL_DSP_SPEED, &Rate) == -1)
+	if(ioctl(fd, SNDCTL_DSP_SPEED, Rate) == -1)
 	{
 		perror("SOUND_PCM_SPEED");
 		return -1;
@@ -65,6 +65,7 @@ int main(void)
 	}
 	
 	while(1)	{
+		
 		//사운드 입력받기 위해서는 파일을 읽는 것과마 찬가지로 read()를 사용하낟.
 		if((status = read(fd, Buf, count)) == -1)
 		{
@@ -82,6 +83,7 @@ int main(void)
 	
 		printf("%s\n", Buf);
 		fprintf(fp, "%s", Buf);
+		
 	}
 
 	fclose(fp);
