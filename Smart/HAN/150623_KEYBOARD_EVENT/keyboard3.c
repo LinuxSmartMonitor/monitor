@@ -2,8 +2,6 @@
 #include <fcntl.h>
 #include <linux/input.h>
 
-
-
 #define EV_PRESSED 1	//keyboard pressed
 #define EV_RELEASED 0	//keyboard released
 #define EV_REPEAT 2
@@ -13,7 +11,6 @@ void Key_event(char ch);	//keyboard function
 int k_fd = 0;
 char *device = "/dev/input/event1";		//This device must modify --> virtual d.d.
 struct input_event k_event;	//keyboard_event structure
-
 
 int main(void)
 {
