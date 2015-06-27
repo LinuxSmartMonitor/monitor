@@ -2,8 +2,6 @@
 #include <fcntl.h>
 #include <linux/input.h>
 
-
-
 #define EV_PRESSED 1	//keyboard pressed
 #define EV_RELEASED 0	//keyboard released
 #define EV_REPEAT 2
