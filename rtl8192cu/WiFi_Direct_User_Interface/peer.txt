@@ -1,0 +1,4 @@
+wlan0     p2p_get:
+
+CM=pbc
+

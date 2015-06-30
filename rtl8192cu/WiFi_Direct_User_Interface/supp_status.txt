@@ -1,0 +1,12 @@
+Selected interface 'wlan0'
+bssid=0a:d4:2b:23:3c:62
+ssid=DIRECT-2J-Lbj
+id=1
+psk=8b65b4485db68391166e4b742abc648aacfe97765f49b3536d0731210e46952
+mode=station
+pairwise_cipher=CCMP
+group_cipher=CCMP
+key_mgmt=WPA2-PSK
+wpa_state=COMPLETED
+address=90:9f:33:e9:88:f4
+signal_level=100
