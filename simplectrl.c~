@@ -32,7 +32,8 @@
 //#define IN 0x082	//*** FOR TEST S5
 //#define OUT 0x02	//*** FOR TEST S5
 
-#define VID 0x04E8
+
+#define VID 0x04E8	//SAMSUNG
 #define PID 0x6860
 
 #define ACCESSORY_VID 0x18D1
@@ -45,10 +46,8 @@
 gcc simplectrl.c -I/usr/include/ -o simplectrl -lusb-1.0 -I/usr/include/ -I/usr/include/libusb-1.0 -lpthread
 */
 
-char framebuffer[512 * 384 * 2];	//framebuffer - buffer
-int frame_count;	//frame count
-short var;	////temp variable
 int WIDTH;	// define nuby;;;
+int offset = 0;	//framebuffer pointer offset
 
 void *mainPhase(void *);
 void *thread_test(void *);
@@ -120,17 +119,16 @@ sleep(1);
 
 void * mainPhase(void *arg){
 
-	int response = 0;
+	int response = 0;	//usb variable
 	static int transferred;
+
+
 	int fbfd = 0;
      struct fb_var_screeninfo vinfo;
      struct fb_fix_screeninfo finfo;
      long int screensize = 0;
      char *fbp = 0;
-     int x = 0, y = 0;
-     long int location = 0;
-
-	short var;
+     int y = 0;
 
 
 /*********************************FRAMEBUFFER*********************/
@@ -168,8 +166,7 @@ void * mainPhase(void *arg){
          perror("Error: failed to map framebuffer device to memory");
          exit(4);
      }
-     printf("The framebuffer device was mapped to memory successfully.\n");
-
+   printf("The framebuffer device was mapped to memory successfully.\n");
 
 
 
@@ -177,42 +174,17 @@ void * mainPhase(void *arg){
 WIDTH = vinfo.xres;	// nubby
 while(1)	{
 //COPY AREA
-   for (y = 0; y < vinfo.yres; y++)	{
+   for (y = 0; y < vinfo.yres; y++)	{	//384
 		
-         for (x = 0; x < vinfo.xres/2 ; x++) {
-             location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
-                        (y+vinfo.yoffset) * finfo.line_length;
-					//*((unsigned short int*)(fbp + location)) = 63488;	//red
-					//ex - write :
-					//*((unsigned short int*)(fbp + location)) = value;
-					//*((unsigned short int*)(fbp + location)) = 63488;	//*** ALL BLUE TEST			
-									
-					//save the buffer, and transfer!!!
-					var = *((unsigned short int*)(fbp + location));
-					
-					framebuffer[frame_count++] = (var);
-					framebuffer[frame_count++] = (var >> 8);
-     		}	//x
-
 			//*** (1) - TRANSFER, INIT
-			libusb_bulk_transfer(handle,OUT, framebuffer, WIDTH , &transferred,0);
-			frame_count = 0;
+			libusb_bulk_transfer(handle,OUT, fbp + (offset * 512), WIDTH , &transferred,0);
+			offset++;
 
-			for (x = 0; x < vinfo.xres/2 ; x++) {
-             location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
-                        (y+vinfo.yoffset) * finfo.line_length;
-					//save the buffer, and transfer!!!
-					var = *((unsigned short int*)(fbp + location));
-					
-					framebuffer[frame_count++] = (var);
-					framebuffer[frame_count++] = (var >> 8);
-			}
-		
 			//*** (2) - TRANSFER, INIT
-			libusb_bulk_transfer(handle,OUT, framebuffer, WIDTH , &transferred,0);
-			frame_count = 0;
-
+			libusb_bulk_transfer(handle,OUT, fbp + (offset * 512), WIDTH , &transferred,0);
+			offset++;
 		}	//y
+		offset = 0;
 	
 	}	//while
 
