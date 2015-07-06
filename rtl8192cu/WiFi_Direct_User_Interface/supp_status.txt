@@ -1,8 +1,8 @@
 Selected interface 'wlan0'
-bssid=0a:d4:2b:23:3c:62
-ssid=DIRECT-2J-Lbj
-id=1
-psk=8b65b4485db68391166e4b742abc648aacfe97765f49b3536d0731210e46952
+bssid=da:57:ef:d6:b6:4b
+ssid=DIRECT-az-SoraKim.
+id=5
+psk=221d66e492d269d8ebcea84784f746e97dc759cf821663f95aec89a3fb3a9
 mode=station
 pairwise_cipher=CCMP
 group_cipher=CCMP

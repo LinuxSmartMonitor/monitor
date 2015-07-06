@@ -1,2 +1,4 @@
 wlan0     p2p_get:
-MAC 0A:D4:2B:23:3C:62
+
+Status=04
+

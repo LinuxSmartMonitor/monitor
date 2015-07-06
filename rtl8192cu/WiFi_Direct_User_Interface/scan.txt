@@ -1,10 +1,2 @@
-wlan0     Scan completed :
-          Cell 01 - Address: 0A:D4:2B:23:BC:62
-                    ESSID:"DIRECT-"
-                    Protocol:IEEE 802.11gn
-                    Frequency:2.412 GHz (Channel 1)
-                    Encryption key:on
-                    Bit Rates:72 Mb/s
-                    IE: Unknown: DD870050F204104A0001101044000101103B00010010470010357C5F4B90835538A07B28BABAEE81EE1021001353414D53554E475F454C454354524F4E4943531023000E53414D53554E475F4D4F42494C45102400043230313410420008313936393131303110540008000A0050F2040005101100034C626A1008000243881049000600372A000120
-                    Quality=100/100  Signal level=100/100  
+wlan0     No scan results
 
