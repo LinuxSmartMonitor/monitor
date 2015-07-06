@@ -2,7 +2,7 @@
 // THIS IS USE THE FB 1
 // TRANSFER AT ONE LINE(NO ONE PIXEL)
 //	IF YOU WANT FB0, MOVE open(fb0)...
-
+//
 #include <sys/types.h>
 #include <pthread.h>
 #include <stdio.h>
