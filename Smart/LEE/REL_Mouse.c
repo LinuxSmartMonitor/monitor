@@ -151,7 +151,8 @@ int main(void)
 {
 
 	int i, j;
-	int x,y,value;
+	int current_x_coord, current_y_coord, mouse_status;
+	int before_x_coord, before_y_coord;
 
 	printf("Starting the keyboard buffer writer/reader \n");
 	
@@ -199,26 +200,40 @@ int main(void)
 		perror("UI_DEV_CREATE error!!!\n");
 	}
 		
+	before_x_coord = 0;
+	before_y_coord = 0;
 	
 	// Receive x,y coordinate from Android 
-	x = 5;
-	y = 5;
-	value = 3;	// 1 is one click, 2 is double click
-	
+//	currnt_x_coord = 5;
+//	currnt_y_coord = 5;
 	Mouse_move(-100,-100);
-	Mouse_move(x,y);
-	Mouse_one_click();
-	if(value == 1) {
-		Mouse_move(x,y);
-		Mouse_one_click();
-	}else if(value == 2) {
-		Mouse_move(x,y);
-		Mouse_double_click();
-	}else {
-		printf("Nothing\n");
-	}		
+
+	for(i=0; i<10; i++ ) {
+		// Receive x,y coordinate from Android 
+		current_x_coord = i*2;
+		current_y_coord = 0;
+
+		current_x_coord = current_x_coord - before_x_coord;
+		current_y_coord = current_y_coord - before_y_coord;
+		mouse_status = 1;	// 1 is one click, 2 is double click
+	
 		
 
+		if(mouse_status == 1) {
+			Mouse_move(current_x_coord, current_y_coord);
+			before_x_coord = current_x_coord;
+			before_y_coord = current_y_coord;
+			Mouse_one_click();
+		}else if(mouse_status == 2) {
+			Mouse_move(current_x_coord, current_y_coord);
+			before_x_coord = current_x_coord;
+			before_y_coord = current_y_coord;
+			Mouse_double_click();
+		}else {
+			printf("Nothing\n");
+		}		
+		
+	}
 
 	//}
 
