@@ -23,13 +23,17 @@
 //#define IN 0x82	//TAB
 //#define OUT 0x04
 
-//#define IN 0x085	//*** FOR TEST S3
-//#define OUT 0x004	//*** FOR TEST S3
+#define IN 0x085	//*** FOR TEST S3
+#define OUT 0x004	//*** FOR TEST S3
 
-#define IN 0x082	//*** FOR TEST S5
-#define OUT 0x02	//*** FOR TEST S5
+//#define IN 0x82	//*** FOR TEST NOTE 2
+//#define OUT 0x01	//*** FOR TEST NOTE 2
 
-#define VID 0x04E8
+//#define IN 0x082	//*** FOR TEST S5
+//#define OUT 0x02	//*** FOR TEST S5
+
+
+#define VID 0x04E8	//SAMSUNG
 #define PID 0x6860
 
 #define ACCESSORY_VID 0x18D1
@@ -42,14 +46,8 @@
 gcc simplectrl.c -I/usr/include/ -o simplectrl -lusb-1.0 -I/usr/include/ -I/usr/include/libusb-1.0 -lpthread
 */
 
-char framebuffer[512 * 384 * 2];	//framebuffer - buffer
-char tfb[1];
-int frame_count;	//frame count
-short var;	////temp variable
-char red;	//SWAP R
-char blue;	//SWAP B
-char tmp1, tmp2;	//temp value
 int WIDTH;	// define nuby;;;
+int offset = 0;	//framebuffer pointer offset
 
 void *mainPhase(void *);
 void *thread_test(void *);
@@ -121,17 +119,16 @@ sleep(1);
 
 void * mainPhase(void *arg){
 
-	int response = 0;
+	int response = 0;	//usb variable
 	static int transferred;
+
+
 	int fbfd = 0;
      struct fb_var_screeninfo vinfo;
      struct fb_fix_screeninfo finfo;
      long int screensize = 0;
      char *fbp = 0;
-     int x = 0, y = 0;
-     long int location = 0;
-
-	short var;
+     int y = 0;
 
 
 /*********************************FRAMEBUFFER*********************/
@@ -169,58 +166,27 @@ void * mainPhase(void *arg){
          perror("Error: failed to map framebuffer device to memory");
          exit(4);
      }
-     printf("The framebuffer device was mapped to memory successfully.\n");
-
-
+   printf("The framebuffer device was mapped to memory successfully.\n");
 
 
 /***************************************/
 WIDTH = vinfo.xres;	// nubby
-int Hline = 8;
-int cnt = 0;
 while(1)	{
 //COPY AREA
-//printf("	i'll tranfer you framebuffer ");
-   for (y = 0; y < vinfo.yres; y++)	{
-			//frame_count = 0;		// INIT trans_count - HHH
-         for (x = 0; x < vinfo.xres; x++) {
-             location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
-                        (y+vinfo.yoffset) * finfo.line_length;
-					//*((unsigned short int*)(fbp + location)) = 63488;	//red
-					//ex - write :
-					//*((unsigned short int*)(fbp + location)) = value;
-					//*((unsigned short int*)(fbp + location)) = 63488;	//*** ALL BLUE TEST			
-									
-					//save the buffer, and transfer!!!
-					var = *((unsigned short int*)(fbp + location));
-					
-					//*** RGB Transfer Code ***
-					red = 0xF8 & (var >> 8);	//R;
-					red = red >> 3;
-					
-					blue = 0x1F & (var);	//B;
-					blue = blue << 3;
-					
-					framebuffer[frame_count++] = ((var) & 0xE0) | red;
-					framebuffer[frame_count++] = ((var >> 8) & 0x07) | blue;
+   for (y = 0; y < vinfo.yres; y++)	{	//384
+		
+			//*** (1) - TRANSFER, INIT
+			libusb_bulk_transfer(handle,OUT, fbp + (offset * 512), WIDTH , &transferred,0);
+			offset++;
 
-					//*** End RGB Transfer Code ***
-				cnt++;
-				if(cnt == 256) {
-					cnt = 0;
-						libusb_bulk_transfer(handle,OUT, framebuffer, WIDTH , &transferred,0);
-						frame_count = 0;
-				}
-     		}	//x
-						//printf("RECEIVED\n");
-	}	//y
-						//libusb_bulk_transfer(handle,OUT, framebuffer, 512* 384 * 2, &transferred,0);
-//usleep(10000);
-}	//while
+			//*** (2) - TRANSFER, INIT
+			libusb_bulk_transfer(handle,OUT, fbp + (offset * 512), WIDTH , &transferred,0);
+			offset++;
+		}	//y
+		offset = 0;
+	
+	}	//while
 
-	//printf("FINISH!\n");
-	//deInit();kjjkjnmkklhmj,,jjjj
-	//pthread_exit(NULL);
 }
 
 static int init(){
