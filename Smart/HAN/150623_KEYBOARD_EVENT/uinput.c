@@ -12,6 +12,7 @@
 #define EV_REPEAT 2
 
 void Key_event(char ch);	//keyboard function
+void Key_shift(char ch);	//keyboard shift
 
 struct input_event ev;	//keyboard_event structure
 struct uinput_user_dev uidev;
@@ -78,10 +79,21 @@ int main(void)
 		perror("UI_DEV_CREATE error!!!\n");
 	}		
 
-	Key_event(30);
-	Key_event(31);
-	Key_event(32);
-	Key_event(33);
+	Key_event(30);	//a
+	Key_event(31);	//s
+	Key_event(32);	//d
+	Key_event(33);	//f
+
+	Key_shift(30);	//A
+	Key_shift(31);	//S
+	Key_shift(32);	//D
+	Key_shift(33);	//F
+
+	Key_event(122);	//KEY_HANGEUL
+	Key_shift(16);	//a
+	Key_shift(17);	//s
+	Key_shift(18);	//d
+	Key_shift(19);	//f
 
 	return 0;
 }
@@ -98,8 +110,34 @@ void Key_event(char ch)
 		//Release the key
 		ev.value = EV_RELEASED;
 		ev.code = ch;
-
 		write(fd, &ev, sizeof(struct input_event) );
+}
+
+void Key_shift(char ch)
+{
+		//Shift key
+		ev.type = EV_KEY;
+		ev.value = EV_PRESSED;
+		ev.code = KEY_LEFTSHIFT;	//KEY_RIGHTSHIFT -> this is shift key
+		write(fd, &ev, sizeof(struct input_event) );
+
+		//Press a key(stuff the keyboard with a keypress)
+		ev.type = EV_KEY;
+		ev.value = EV_PRESSED;
+		ev.code = ch;
+		write(fd, &ev, sizeof(struct input_event) );
+
+		usleep(100000);	//100000us = 100ms = 0.1s delay!!!NO DELETE
+		//Release the key
+		ev.value = EV_RELEASED;
+		ev.code = ch;
+		write(fd, &ev, sizeof(struct input_event) );
+
+		usleep(100000);	//100000us = 100ms = 0.1s delay!!!NO DELETE
+		//Release the shift
+		ev.value = EV_RELEASED;
+		ev.code = KEY_LEFTSHIFT;
+		write(fd, &ev, sizeof(struct input_event) );	
 }
 
 /*

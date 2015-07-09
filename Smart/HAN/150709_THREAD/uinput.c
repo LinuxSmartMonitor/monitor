@@ -90,10 +90,12 @@ int main(void)
 	Key_shift(33);	//F
 
 	Key_event(122);	//KEY_HANGEUL
-	Key_shift(16);	//a
-	Key_shift(17);	//s
-	Key_shitf(18);	//d
-	Key_shift(19);	//f
+	Key_event(16);	//ㅂ
+	Key_event(17);	//ㅈ
+	Key_event(18);	//ㄷ
+	Key_event(19);	//ㄱ
+	Key_event(122);	//KEY_HANGEUL
+	
 
 	return 0;
 }
@@ -133,7 +135,7 @@ void Key_shift(char ch)
 		ev.code = ch;
 		write(fd, &ev, sizeof(struct input_event) );
 
-		usleep(100000);	//100000us = 100ms = 0.1s delay!!!NO DELETE
+		//usleep(100000);	//100000us = 100ms = 0.1s delay!!!NO DELETE
 		//Release the shift
 		ev.value = EV_RELEASED;
 		ev.code = KEY_LEFTSHIFT;
