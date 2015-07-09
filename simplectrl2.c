@@ -23,7 +23,6 @@
 
 
 //#define IN 0x81	//NEXUS ONE
-//#define OUT 0x02
 
 //#define IN 0x82	//TAB
 //#define OUT 0x04
@@ -33,6 +32,9 @@
 
 //#define IN 0x82	//*** FOR TEST NOTE 2
 //#define OUT 0x01	//*** FOR TEST NOTE 2
+
+//#define IN 0x081	//*** FOR TEST S4
+//#define OUT 0x04	//*** FOR TEST S4
 
 //#define IN 0x082	//*** FOR TEST S5
 //#define OUT 0x02	//*** FOR TEST S5
@@ -68,7 +70,9 @@ const char* description,
 const char* version,
 const char* uri,
 const char* serialNumber);
-
+void Mouse_one_click();
+void Mouse_double_click();
+void Mouse_move(int x, int y);
 //static
 static struct libusb_device_handle* handle;
 
@@ -80,13 +84,21 @@ void *inputThread(void *arg);
 void Key_event(char ch);	//keyboard function
 void Key_shift(char ch);	//keyboard shift
 
-struct input_event ev;	//keyboard_event structure
+struct input_event ev;		// keyboard_event structure
+struct input_event m_ev;	// ############## Mouse_event structure
 struct uinput_user_dev uidev;
 
 int fd;
 
 void *inputThread(void *arg)
 {
+	//############## Mouse Event Start 1 ####################
+
+	int current_x_coord, current_y_coord, mouse_status;
+	int before_x_coord, before_y_coord;
+	
+	//############## Mouse Event End 1 ####################
+
 	//************FOR KEYBOARD ************
 	int ret;
 
@@ -95,8 +107,8 @@ void *inputThread(void *arg)
 	printf("Starting the keyboard buffer writer/reader \n");
 
 	fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK | O_CREAT);
-
-	if(fd < 0)	{
+	
+	if(fd < 0 )	{
 		perror("OPEN ERROR!!!\n");
 	}
 
@@ -114,6 +126,22 @@ void *inputThread(void *arg)
 	//ret = ioctl(fd, UI_SET_EVBIT, EV_FF_STATUS);
 	//ret = ioctl(fd, UI_SET_EVBIT, EV_MAX);
 	//ret = ioctl(fd, UI_SET_EVBIT, EV_CNT);
+
+	//############## Mouse Event Start 2 ####################
+	//ret = ioctl(fd, UI_SET_EVBIT, EV_KEY);
+	//ret = ioctl(fd, UI_SET_EVBIT, EV_SYN);
+
+	ret = ioctl(fd, UI_SET_KEYBIT, BTN_MOUSE);
+	ret = ioctl(fd, UI_SET_KEYBIT, BTN_LEFT);
+	ret = ioctl(fd, UI_SET_KEYBIT, BTN_RIGHT);
+	ret = ioctl(fd, UI_SET_EVBIT, EV_REL);
+	ret = ioctl(fd, UI_SET_RELBIT, REL_X);
+	ret = ioctl(fd, UI_SET_RELBIT, REL_Y);
+	//############## Mouse Event End 2 ####################
+
+	if(ret < 0)	{
+		perror("Mouse ioctl error!!!\n");
+	}
 
 	if(ret < 0)	{
 		perror("ret ioctl error!!!\n");
@@ -145,6 +173,18 @@ void *inputThread(void *arg)
 		perror("UI_DEV_CREATE error!!!\n");
 	}
 
+	//############## Mouse Event Start 3 ####################
+
+	//ret = ioctl(fd, UI_SET_EVBIT, EV_KEY);	//Key press and release
+	//ret = ioctl(fd, UI_SET_EVBIT, EV_SYN);	//relative axis event - mouse
+
+	before_x_coord = 0;
+	before_y_coord = 0;
+	
+	Mouse_move(-100,-100);
+
+	//############## Mouse Event End 3 ####################
+	
 	while(1)
 	{
 		Key_event(30);	//a
@@ -166,9 +206,156 @@ void *inputThread(void *arg)
 		Key_event(19);	//ㄱ
 		Key_event(122);	//KEY_HANGEUL
 		*/
+
+		//############## Mouse Event Start 4 ####################
+		// Receive x,y coordinate from Android 
+		current_x_coord = rand()%30;
+		current_y_coord = rand()%30;
+		
+		current_x_coord = current_x_coord - before_x_coord;
+		current_y_coord = current_y_coord - before_y_coord;
+		mouse_status = 1;	// 1 is one click, 2 is double click
+		
+		if(mouse_status == 1) {
+			Mouse_move(current_x_coord, current_y_coord);
+			before_x_coord = current_x_coord;
+			before_y_coord = current_y_coord;
+			//Mouse_one_click();
+		}else if(mouse_status == 2) {
+			Mouse_move(current_x_coord, current_y_coord);
+			before_x_coord = current_x_coord;
+			before_y_coord = current_y_coord;
+			//Mouse_double_click();
+		}else {
+			printf("Nothing\n");
+		}
+		//############## Mouse Event End 4 ####################
+
 	}
 
 }	//inputThread
+
+//############## Mouse Event Start 5 ####################
+
+void Mouse_move(int x, int y)
+{
+	printf("\nMouse Move (%d,%d)\n",x,y);
+	int i;
+
+	for(i=0; i<30; i++)	{
+		//printf("1 For count : %d\n",i);
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_REL;
+		m_ev.code = REL_X;
+		m_ev.value = x;
+		if(write(fd, &m_ev, sizeof(struct input_event)) < 0 )
+			printf("EV_REL x Fail 1\n");
+
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_REL;
+		m_ev.code = REL_Y;
+		m_ev.value = y;
+		if(write(fd, &m_ev, sizeof(struct input_event)) < 0 )
+			printf("EV_REL y Fail 1\n");
+
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_SYN;
+		m_ev.code = SYN_REPORT;
+		m_ev.value = 1;
+		if(write(fd, &m_ev, sizeof(struct input_event)) < 0)
+			printf("EV_SYN Fail 1\n");
+		
+		usleep(10000);
+	}//for 
+}
+
+void Mouse_one_click()
+{
+		printf("Enter Mouse_one_click\n");
+		// one click
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_KEY;
+		m_ev.code = BTN_LEFT;
+		m_ev.value = 1;
+		write(fd, &m_ev, sizeof(struct input_event));
+
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_SYN;
+		m_ev.code = SYN_REPORT;
+		m_ev.value = 0;
+		write(fd, &m_ev, sizeof(struct input_event));
+
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_KEY;
+		m_ev.code = BTN_LEFT;
+		m_ev.value = 0;
+		write(fd, &m_ev, sizeof(struct input_event));
+
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_SYN;
+		m_ev.code = SYN_REPORT;
+		m_ev.value = 0;
+
+}
+
+//one click + one click = double click
+void Mouse_double_click()
+{
+		printf("Enter Mouse_double_click\n");
+		// one click
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_KEY;
+		m_ev.code = BTN_LEFT;
+		m_ev.value = 1;
+		write(fd, &m_ev, sizeof(struct input_event));
+
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_SYN;
+		m_ev.code = SYN_REPORT;
+		m_ev.value = 0;
+		write(fd, &m_ev, sizeof(struct input_event));
+
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_KEY;
+		m_ev.code = BTN_LEFT;
+		m_ev.value = 0;
+		write(fd, &m_ev, sizeof(struct input_event));
+
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_SYN;
+		m_ev.code = SYN_REPORT;
+		m_ev.value = 0;
+		write(fd, &m_ev, sizeof(struct input_event));
+
+		// one click
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_KEY;
+		m_ev.code = BTN_LEFT;
+		m_ev.value = 1;
+		write(fd, &m_ev, sizeof(struct input_event));
+
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_SYN;
+		m_ev.code = SYN_REPORT;
+		m_ev.value = 0;
+		write(fd, &m_ev, sizeof(struct input_event));
+
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_KEY;
+		m_ev.code = BTN_LEFT;
+		m_ev.value = 0;
+		write(fd, &m_ev, sizeof(struct input_event));
+
+		memset(&m_ev, 0, sizeof(struct input_event));
+		m_ev.type = EV_SYN;
+		m_ev.code = SYN_REPORT;
+		m_ev.value = 0;
+		write(fd, &m_ev, sizeof(struct input_event));
+}
+
+
+
+//############## Mouse Event End 5  ####################
 
 
 void Key_event(char ch)
