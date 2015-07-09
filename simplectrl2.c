@@ -242,31 +242,31 @@ void Mouse_move(int x, int y)
 	printf("\nMouse Move (%d,%d)\n",x,y);
 	int i;
 
-	for(i=0; i<30; i++)	{
-		//printf("1 For count : %d\n",i);
-		memset(&m_ev, 0, sizeof(struct input_event));
-		m_ev.type = EV_REL;
-		m_ev.code = REL_X;
-		m_ev.value = x;
-		if(write(fd, &m_ev, sizeof(struct input_event)) < 0 )
-			printf("EV_REL x Fail 1\n");
 
-		memset(&m_ev, 0, sizeof(struct input_event));
-		m_ev.type = EV_REL;
-		m_ev.code = REL_Y;
-		m_ev.value = y;
-		if(write(fd, &m_ev, sizeof(struct input_event)) < 0 )
-			printf("EV_REL y Fail 1\n");
+	//printf("1 For count : %d\n",i);
+	memset(&m_ev, 0, sizeof(struct input_event));
+	m_ev.type = EV_REL;
+	m_ev.code = REL_X;
+	m_ev.value = x*10;
+	if(write(fd, &m_ev, sizeof(struct input_event)) < 0 )
+		printf("EV_REL x Fail 1\n");
 
-		memset(&m_ev, 0, sizeof(struct input_event));
-		m_ev.type = EV_SYN;
-		m_ev.code = SYN_REPORT;
-		m_ev.value = 1;
-		if(write(fd, &m_ev, sizeof(struct input_event)) < 0)
-			printf("EV_SYN Fail 1\n");
+	memset(&m_ev, 0, sizeof(struct input_event));
+	m_ev.type = EV_REL;
+	m_ev.code = REL_Y;
+	m_ev.value = y*10;
+	if(write(fd, &m_ev, sizeof(struct input_event)) < 0 )
+		printf("EV_REL y Fail 1\n");
+
+	memset(&m_ev, 0, sizeof(struct input_event));
+	m_ev.type = EV_SYN;
+	m_ev.code = SYN_REPORT;
+	m_ev.value = 1;
+	if(write(fd, &m_ev, sizeof(struct input_event)) < 0)
+		printf("EV_SYN Fail 1\n");
 		
-		usleep(10000);
-	}//for 
+	usleep(1000);
+ 
 }
 
 void Mouse_one_click()
