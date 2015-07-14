@@ -1,6 +1,53 @@
 
 #include "p2p_test.h"
-/*gcc -o p2ptest ./p2p_ui_test_2.c ./p2p_api_test_linux.c -lpthread*/
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <ifaddrs.h>
+#include <fcntl.h>
+#include <linux/fb.h>
+#include <sys/mman.h>
+#include <signal.h>
+
+#include <errno.h>
+#include <linux/input.h>
+#include <linux/uinput.h>
+
+
+//*** KEYBOARD DEFINE
+#define EV_PRESSED 1	//keyboard pressed
+#define EV_RELEASED 0	//keyboard released
+#define EV_REPEAT 2
+
+/*if you want to compile, you should use this*/
+/*gcc -o p2ptest ./p2p_ui_test_2.c ./p2p_api_test_linux.c -lpthread -I/usr/include/*/
+void Mouse_one_click();
+void Mouse_double_click();
+void Mouse_move(int x, int y);
+//static
+static struct libusb_device_handle* handle;
+
+
+//*** KEYBOARD SECTION *************************
+
+void *inputThread(void *arg);
+
+void Key_event(char ch);	//keyboard function
+void Key_shift(char ch);	//keyboard shift
+
+struct input_event ev;		// keyboard_event structure
+struct input_event m_ev;	// ############## Mouse_event structure
+struct uinput_user_dev uidev;
+int fd;
+
 char *naming_wpsinfo(int wps_info)
 {
 	switch(wps_info)
@@ -62,65 +109,6 @@ char* naming_enable(int enable)
 
 void ui_screen(struct p2p *p)
 {
-
-	system("clear");
-	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-	printf("****************************************************************************************************\n");
-	printf("*                                      P2P UI TEST v0.5                                            *\n");
-	printf("****************************************************************************************************\n");
-	printf("* Enable: %-89s*\n", naming_enable(p->enable));
-	printf("* Intent: %2d                                                                                       *\n", p->intent);
-	printf("* Status: %-89s*\n", naming_status(p->status));
-	printf("* Role: %-91s*\n", naming_role(p->role));
-	printf("* WPS method: %-85s*\n", naming_wpsinfo(p->wps_info));
-	printf("* PIN code: %08d                                                                               *\n", p->pin);
-	
-	printf("* Device name: %-84s*\n", p->dev_name);
-	printf("* Peer device address: %-76s*\n", p->peer_devaddr);
-	printf("* Peer interface address: %-73s*\n", p->peer_ifaddr);
-	
-	printf("*                                                                                                  *\n");
-	printf("* e) Wi-Fi Direct Enable/Disable                                                                   *\n");
-	printf("* i) Intent ( The degree to be Group Owner/SoftAP )                                                *\n");
-	printf("* a) Scan Wi-Fi Direct devices                                                                     *\n");
-	printf("* m) Peer device address you want to test                                                          *\n");
-	printf("* p) Provision discovery                                                                           *\n");
-	printf("* c) Input PIN codes                                                                               *\n");
-	printf("* w) WPS method                                                                                    *\n");
-	printf("* n) Group owner negotiation                                                                       *\n");
-	printf("* x) Start wpa_supplicant/hostapd                                                                  *\n");
-	printf("* h) Set operation channel                        | t) Set SoftAP ssid                             *\n");
-	printf("* r) Get Current P2P Role                         | s) Get Current P2P Status                      *\n");
-	printf("* d) Set device name                              | l) Set Listen channel                          *\n");
-	printf("* f) Reflash Current State                        | q) Quit                                        *\n");
-	printf("****************************************************************************************************\n");
-	
-	
-	if(p->p2p_get==0)
-	{
-		printf("*                                                                                                  *\n");
-	}	
-	else if(p->p2p_get==1)
-	{
-		printf("*%-98s*\n", p->print_line);
-	}
-	
-	printf("****************************************************************************************************\n");
-	
-	if( ( p->show_scan_result == 1 ) && ( p->have_p2p_dev == 1 ) )
-	//if( (p->have_p2p_dev == 1) && (p->enable >= P2P_ROLE_DEVICE) && ( p->wpsing == 0 ) && (p->status >= P2P_STATE_LISTEN && p->status <= P2P_STATE_FIND_PHASE_SEARCH) )
-	{
-			scan_result(p);
-	}
-	else
-	{
-		int i=0;
-		for(i = 0; i < SCAN_POOL_NO + 1; i++ )
-			printf("*                                                                                                  *\n");
-	}	
-	
-	printf("****************************************************************************************************\n");
-
 	p->show_scan_result = 0;
 }
 
@@ -194,7 +182,6 @@ void rename_intf(struct p2p *p)
 }
 
 
-//int main()
 int main(int argc, char **argv)
 {
 	char	peerifa[40] = { 0x00 };
@@ -202,6 +189,64 @@ int main(int argc, char **argv)
 	struct p2p p2pstruct;
 	struct p2p *p=NULL;
 
+
+
+
+/*********************************FRAMEBUFFER*********************/
+
+	int fbfd = 0;
+     struct fb_var_screeninfo vinfo;
+     struct fb_fix_screeninfo finfo;
+     long int screensize = 0;
+     char *fbp = 0;
+     int y = 0;
+int WIDTH;	// define nuby;;;
+	int offset = 0;	//framebuffer pointer offset
+
+
+     // Open the file for reading and writing
+     fbfd = open("/dev/fb1", O_RDWR);
+     if (fbfd == -1) {
+         perror("Error: cannot open framebuffer device");
+         exit(1);
+    	}
+     printf("The framebuffer device was opened successfully.\n");
+
+     // Get fixed screen information
+     if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo) == -1) {
+         perror("Error reading fixed information");
+         exit(2);
+     }
+
+     // Get variable screen information
+     if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo) == -1) {
+         perror("Error reading variable information");
+         exit(3);
+     }
+
+     printf("%dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
+
+     // Figure out the size of the screen in bytes
+     screensize = vinfo.xres * vinfo.yres * vinfo.bits_per_pixel / 8;
+	//define half_x
+
+     // Map the device to memory
+     fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED,
+                        fbfd, 0);
+     if ((int)fbp == -1) {
+         perror("Error: failed to map framebuffer device to memory");
+         exit(4);
+     }
+   printf("The framebuffer device was mapped to memory successfully.\n");
+WIDTH = vinfo.xres;	// nubby
+
+
+
+
+
+
+
+/************ Wifi Direct Connection *********************/
 	p = &p2pstruct;	
 	if( p != NULL)
 	{
@@ -211,206 +256,195 @@ int main(int argc, char **argv)
 
 	strcpy(p->ifname, argv[1] );
 	
-	/* Disable P2P functionalities at first*/
+	
 	p->enable=P2P_ROLE_DISABLE;
 	p2p_enable(p);
 	p2p_get_hostapd_conf(p);
 	usleep(50000);  
-  rename_intf(p);
+  	rename_intf(p);
+
+
+
+	ui_screen(p);
+
+	p->show_scan_result = 1;
+	ui_screen(p);
+	//scanf("%d",&p->enable);
+	p->enable = 1;
+	p2p_enable(p);
+	p->show_scan_result = 1;
+	ui_screen(p);
+
+
+	p->thread_trigger = THREAD_NONE ;
 
 
 
 
-
-				ui_screen(p);
-
-				p->show_scan_result = 1;
-				ui_screen(p);
-				printf("Please insert enable mode;[0]Disable, [1]Device, [2]Client, [3]GO:");
-				//scanf("%d",&p->enable);
-				p->enable = 1;
-				p2p_enable(p);
-				p->show_scan_result = 1;
-				ui_screen(p);
-
-
-			p->thread_trigger = THREAD_NONE ;
-			
-			
-
-
-				p->wps_info=3;
-				p2p_wpsinfo(p);
-				
-				p2p_status(p, 0);
-				
-				if(p->status != P2P_STATE_GONEGO_OK)
-				{
-					p2p_set_nego(p);
-				}
-				else
-				{
-					p2p_role(p,0);
-										
-					if( p->role == P2P_ROLE_CLIENT )
-					{
-						p2p_client_mode(p);
-					}
-					else if( p->role == P2P_ROLE_GO )
-					{
-						p2p_go_mode(p);
-					}
-				}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  /*
-	do
-	{
-		ui_screen(p);
-
-		printf("*insert cmd:");
-		memset( scan, 0x00, CMD_SZ );
-		scanf("%s", scan);
-
-		if( p->thread_trigger == THREAD_NONE )		//Active mode for user interface
-		{
-			
-			if( strncmp(scan, "e", 1) == 0 )	//Enable
-			{
-				p->show_scan_result = 1;
-				ui_screen(p);
-				printf("Please insert enable mode;[0]Disable, [1]Device, [2]Client, [3]GO:");
-				scanf("%d",&p->enable);
+	p->wps_info=3;
+	p2p_wpsinfo(p);
 	
-				p2p_enable(p);
-				p->show_scan_result = 1;
-			}
-#ifndef P2P_AUTO
+	p2p_status(p, 0);
 
-#endif //P2P_AUTO
+	if(p->status == P2P_STATE_LISTEN)
+		{}
+	else
+		return 0;
 
-		}
-		else if( p->thread_trigger == THREAD_DEVICE )		//Passive mode for user interface
+
+
+
+
+
+	
+
+	printf("Please Connect Your phone to WIFI DIRECT\n");
+
+
+	if(p->status != P2P_STATE_GONEGO_OK)
+	{
+		p2p_set_nego(p);
+	}
+	else
+	{
+		p2p_role(p,0);
+						
+		if( p->role == P2P_ROLE_CLIENT )
 		{
-			p->thread_trigger = THREAD_NONE ;
-			
-			if( strncmp(scan, "b", 1) == 0 )
-			{
-				p->wps_info=3;
-				p2p_wpsinfo(p);
-				
-				p2p_status(p, 0);
-				
-				if(p->status != P2P_STATE_GONEGO_OK)
-				{
-					p2p_set_nego(p);
-				}
-				else
-				{
-					p2p_role(p,0);
-										
-					if( p->role == P2P_ROLE_CLIENT )
-					{
-						p2p_client_mode(p);
-					}
-					else if( p->role == P2P_ROLE_GO )
-					{
-						p2p_go_mode(p);
-					}
-				}
-			}
-			else if( strncmp(scan, "c", 1) == 0 )
-			{
-				p->wps_info=2;
-				p2p_wpsinfo(p);
-				
-				p2p_status(p, 0);
-							
-				if(p->status != P2P_STATE_GONEGO_OK)
-				{
-					p2p_set_nego(p);
-				}					
-				else
-				{
-					p2p_role(p,0);
-					p2p_ifaddr(p);
-										
-					if( p->role == P2P_ROLE_CLIENT )
-					{
-						p2p_client_mode(p);
-					}
-					else if( p->role == P2P_ROLE_GO )
-					{
-						p2p_go_mode(p);
-					}
-				}
-			}
-			else if( ('0' <= *scan ) && ( *scan <= '9') )
-			{
-				printf("In passive pin code\n");
-				
-				p->pin = atoi(scan);
-				
-				p->wps_info=1;
-				p2p_wpsinfo(p);
-				
-				p2p_set_nego(p);
-			}
+			p2p_client_mode(p);
+		
 		}
-		else if( p->thread_trigger == THREAD_GO )		//Passive mode for user interface
+		else if( p->role == P2P_ROLE_GO )
 		{
-			
-			p->thread_trigger = THREAD_NONE ;
-			
-			if( strncmp(scan, "b", 1) == 0 )
-			{
-				p->wps_info=3;
-				p2p_wpsinfo(p);
-
-			}
-			else if( strncmp(scan, "c", 1) == 0 )
-			{
-				p->wps_info=2;
-				p2p_wpsinfo(p);
-			}
-			else if( ('0' <= *scan ) && ( *scan <= '9') )
-			{
-				printf("In passive pin code\n");
-				
-				p->pin = atoi(scan);
-				
-				p->wps_info=1;
-				p2p_wpsinfo(p);
-			}
-			
 			p2p_go_mode(p);
-			
 		}
 	}
-	while( 1 );*/
 
 
-	while(1)
-{
-scanf("%c",&scan);
-if(strncmp(scan,"q",1)==0)
-{
-	break;
-}
-}
+
+
+	
+	/********* Want to get IP address, you should be wait!*/
+   /* because it takes a little bit time ****/
+
+	printf("WIFI DIRECT SUCCESS, just after 8 seconds\n");
+	printf("Wait for ...");
+	int i=0;
+	for(i=0; i<8; i++)
+	{
+		printf("%d sec\n",i);
+		sleep(1);
+	}
+	printf("start to send data...\n");
+	
+
+
+
+
+
+
+
+
+
+
+
+
+/************* Opening a Socket *******************/
+
+
+
+
+
+
+
+	int ipfd,sockfd, n;
+	struct ifreq ifr;
+	struct sockaddr_in servaddr, cliaddr;
+	socklen_t len;
+	char mesg[1000];
+	char ipaddr[15];
+	
+	int returnv;
+/*
+	ipfd= socket(AF_INET, SOCK_DGRAM, 0);
+	ifr.ifr_addr.sa_family = AF_INET;
+	strncpy(ifr.ifr_name, "wlan0", IFNAMSIZ-1);
+	ioctl(ipfd, SIOCGIFADDR, &ifr);
+	close(ipfd);
+	
+
+
+	sockfd=socket(AF_INET, SOCK_DGRAM, 0);
+	bzero(&servaddr, sizeof(servaddr));
+	servaddr.sin_family = AF_INET;
+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	servaddr.sin_port = htons(3490);
+
+	inet_pton(AF_INET, inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr) ,&servaddr.sin_addr);
+	
+	bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
+	printf("%s\n", inet_ntoa(servaddr.sin_addr));
+	printf("[Success] Connect Success\n");
+	int num=0;
+len = sizeof(cliaddr);
+printf("len : %d\n",len);
+	for(;;)
+	{
+
+
+
+len = sizeof(cliaddr);
+		
+	for (y = 0; y < vinfo.yres; y++)	{	//384
+			returnv = sendto(sockfd, fbp + (offset * 1024), 1024, 0, (struct sockaddr *)&cliaddr, len);
+printf("Sent %d bytes.\n", returnv);
+			offset++;
+		}	//y
+		offset = 0;*/
+
+
+/*
+		len = sizeof(cliaddr);
+		n = recvfrom(sockfd, mesg, 1000, 0, (struct sockaddr *) &cliaddr, &len);
+		printf("==================\n");
+		mesg[n] = 0;
+		printf("%d Received the following : \n",++num);
+		printf("%s\n",mesg);
+		printf("==================\n");
+		returnv = sendto(sockfd, mesg, n, 0, (struct sockaddr *)&cliaddr, len);
+		printf("Sent %d bytes.\n", returnv);*/
+
+
+	}
+
+
+/***************************************/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	/* Disable P2P functionalities when exits*/
 	p->enable= -1 ;
 	p2p_enable(p);
