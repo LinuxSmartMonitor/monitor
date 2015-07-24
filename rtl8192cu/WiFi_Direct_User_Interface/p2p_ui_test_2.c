@@ -1,4 +1,6 @@
 
+/*gcc -o p2ptest ./p2p_ui_test_2.c ./p2p_api_test_linux.c -lpthread -I/usr/include/*/
+
 #include "p2p_test.h"
 #include <stdio.h>
 #include <unistd.h>
@@ -20,33 +22,6 @@
 #include <errno.h>
 #include <linux/input.h>
 #include <linux/uinput.h>
-
-
-//*** KEYBOARD DEFINE
-#define EV_PRESSED 1	//keyboard pressed
-#define EV_RELEASED 0	//keyboard released
-#define EV_REPEAT 2
-
-/*if you want to compile, you should use this*/
-/*gcc -o p2ptest ./p2p_ui_test_2.c ./p2p_api_test_linux.c -lpthread -I/usr/include/*/
-void Mouse_one_click();
-void Mouse_double_click();
-void Mouse_move(int x, int y);
-//static
-static struct libusb_device_handle* handle;
-
-
-//*** KEYBOARD SECTION *************************
-
-void *inputThread(void *arg);
-
-void Key_event(char ch);	//keyboard function
-void Key_shift(char ch);	//keyboard shift
-
-struct input_event ev;		// keyboard_event structure
-struct input_event m_ev;	// ############## Mouse_event structure
-struct uinput_user_dev uidev;
-int fd;
 
 char *naming_wpsinfo(int wps_info)
 {
@@ -190,8 +165,6 @@ int main(int argc, char **argv)
 	struct p2p *p=NULL;
 
 
-
-
 /*********************************FRAMEBUFFER*********************/
 
 	int fbfd = 0;
@@ -247,6 +220,11 @@ WIDTH = vinfo.xres;	// nubby
 
 
 /************ Wifi Direct Connection *********************/
+
+printf("Wait for some seconds\n");
+	
+	while(1)
+{
 	p = &p2pstruct;	
 	if( p != NULL)
 	{
@@ -254,13 +232,13 @@ WIDTH = vinfo.xres;	// nubby
 		init_p2p(p);
 	}
 
-	strcpy(p->ifname, argv[1] );
+	strcpy(p->ifname, "wlan0" );
 	
 	
 	p->enable=P2P_ROLE_DISABLE;
 	p2p_enable(p);
 	p2p_get_hostapd_conf(p);
-	usleep(50000);  
+	//usleep(50000);  
   	rename_intf(p);
 
 
@@ -279,24 +257,50 @@ WIDTH = vinfo.xres;	// nubby
 	p->thread_trigger = THREAD_NONE ;
 
 
-
-
 	p->wps_info=3;
 	p2p_wpsinfo(p);
 	
 	p2p_status(p, 0);
 
-	if(p->status == P2P_STATE_LISTEN)
-		{}
-	else
-		return 0;
-
-
-
-
-
-
 	
+
+	if(p->status == P2P_STATE_LISTEN)
+		{break;}
+
+
+	//P2P_Role_Disable
+			p->wps_info = 0;
+		p->pin = 12345670;
+
+		p2p_status(p, 0);
+		p2p_role(p, 0);
+		
+		if(p->res == 0)
+		{
+			p->res = 1;
+		}
+
+		if(p->res_go == 0)
+		{
+			p->res_go = 1;
+		}
+				
+		p->wpa_open = _FALSE;
+		system("killall wpa_supplicant");
+#ifdef DHCP
+		system("killall dhclient");
+#endif
+		system("clear");
+		p->ap_open = _FALSE;
+		system("killall hostapd");
+#ifdef DHCP
+		system("killall dhcpd");
+#endif
+		system("clear");
+
+
+
+	}
 
 	printf("Please Connect Your phone to WIFI DIRECT\n");
 
@@ -327,125 +331,14 @@ WIDTH = vinfo.xres;	// nubby
 	/********* Want to get IP address, you should be wait!*/
    /* because it takes a little bit time ****/
 
-	printf("WIFI DIRECT SUCCESS, just after 8 seconds\n");
-	printf("Wait for ...");
-	int i=0;
-	for(i=0; i<8; i++)
-	{
-		printf("%d sec\n",i);
-		sleep(1);
-	}
-	printf("start to send data...\n");
-	
+	printf("WIFI DIRECT SUCCESS\n");
 
-
-
-
-
-
-
-
-
-
-
-
-/************* Opening a Socket *******************/
-
-
-
-
-
-
-
-	int ipfd,sockfd, n;
-	struct ifreq ifr;
-	struct sockaddr_in servaddr, cliaddr;
-	socklen_t len;
-	char mesg[1000];
-	char ipaddr[15];
-	
-	int returnv;
-/*
-	ipfd= socket(AF_INET, SOCK_DGRAM, 0);
-	ifr.ifr_addr.sa_family = AF_INET;
-	strncpy(ifr.ifr_name, "wlan0", IFNAMSIZ-1);
-	ioctl(ipfd, SIOCGIFADDR, &ifr);
-	close(ipfd);
-	
-
-
-	sockfd=socket(AF_INET, SOCK_DGRAM, 0);
-	bzero(&servaddr, sizeof(servaddr));
-	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	servaddr.sin_port = htons(3490);
-
-	inet_pton(AF_INET, inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr) ,&servaddr.sin_addr);
-	
-	bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
-	printf("%s\n", inet_ntoa(servaddr.sin_addr));
-	printf("[Success] Connect Success\n");
-	int num=0;
-len = sizeof(cliaddr);
-printf("len : %d\n",len);
-	for(;;)
-	{
-
-
-
-len = sizeof(cliaddr);
-		
-	for (y = 0; y < vinfo.yres; y++)	{	//384
-			returnv = sendto(sockfd, fbp + (offset * 1024), 1024, 0, (struct sockaddr *)&cliaddr, len);
-printf("Sent %d bytes.\n", returnv);
-			offset++;
-		}	//y
-		offset = 0;*/
-
-
-/*
-		len = sizeof(cliaddr);
-		n = recvfrom(sockfd, mesg, 1000, 0, (struct sockaddr *) &cliaddr, &len);
-		printf("==================\n");
-		mesg[n] = 0;
-		printf("%d Received the following : \n",++num);
-		printf("%s\n",mesg);
-		printf("==================\n");
-		returnv = sendto(sockfd, mesg, n, 0, (struct sockaddr *)&cliaddr, len);
-		printf("Sent %d bytes.\n", returnv);*/
-
-
-	}
 
 
 /***************************************/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	/* Disable P2P functionalities when exits*/
+/*
 	p->enable= -1 ;
 	p2p_enable(p);
 
@@ -454,7 +347,7 @@ printf("Sent %d bytes.\n", returnv);
 	system( "rm -f ./scan.txt" );
 	system( "rm -f ./peer.txt" );
 	system( "rm -f ./status.txt" );
-	system( "rm -f ./cm.txt" );
+	system( "rm -f ./cm.txt" );*/
 	
 	return 0;
 
