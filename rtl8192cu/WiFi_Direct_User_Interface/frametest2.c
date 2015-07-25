@@ -182,11 +182,11 @@ void *inputThread(void *arg)
 		return 0;
 	}
 	bzero(&servaddr, sizeof(servaddr));	
-	servaddr.sin_family = PF_INET;
+	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	servaddr.sin_port = htons(3491);
 
-	inet_pton(PF_INET, inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr) ,&servaddr.sin_addr);
+	inet_pton(AF_INET, inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr) ,&servaddr.sin_addr);
 	
 	if(-1 == bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)))
 	{
@@ -204,19 +204,17 @@ void *inputThread(void *arg)
 	int inputdata[3];
 	while(1)
 	{
-		printf("inputThread\n");
-		recvfrom(sockfd, inputtemp, 3072, 0, (struct sockaddr*)&cliaddr, &client_addr_size);
+		//printf("inputThread\n");
+		printf("recieve : %d\n",recvfrom(sockfd, inputtemp, 3072, 0, (struct sockaddr*)&cliaddr, &client_addr_size));
 		inputdata[0] = *(int*)(inputtemp);
 		inputdata[1] = *(int*)(inputtemp+1024);
 		inputdata[2] = *(int*)(inputtemp+2048);
 		printf("%d %d %d\n",inputdata[0],inputdata[1],inputdata[2]);
-break;
-
 /*****************************          [   Protocol  ]           *****************************************************/
 	/* 
-						inputdata[0] ,	 inputdata[1], inputdata[2]
-		mouse : 		x coord, 				y coord, 	status
-		keyboard : 	-1, 				data, 			-1 
+	inputdata[0] ,	 inputdata[1], inputdata[2]
+mouse : 		x coord, 		y coord, 	status
+		keyboard : 	-1, 	data, 			-1 
 	*/
 
 
@@ -226,7 +224,7 @@ break;
 			return 0;
 		}
 
-		Key_event(30);	//a
+		//Key_event(30);	//a
 		//sleep(1);
 		/*&
 		Key_event(31);	//s
@@ -248,21 +246,22 @@ break;
 
 		//############## Mouse Event Start 4 ####################
 		// Receive x,y coordinate from Android 
-
+		current_x_coord = inputdata[0];
+		current_y_coord = inputdata[1];
 		//current_x_coord = rand()%30;
 		//current_y_coord = rand()%30;
 		
 		current_x_coord = current_x_coord - before_x_coord;
 		current_y_coord = current_y_coord - before_y_coord;
-		mouse_status = 1;	// 1 is one click, 2 is double click
-		
+		//mouse_status = 1;	// 1 is one click, 2 is double click
+		mouse_status = inputdata[2];
 
 
 		if(mouse_status == 1) {
 			Mouse_move(current_x_coord, current_y_coord);
 			before_x_coord = current_x_coord;
 			before_y_coord = current_y_coord;
-			//Mouse_one_click();
+			Mouse_one_click();
 		}else if(mouse_status == 2) {
 			Mouse_move(current_x_coord, current_y_coord);
 			before_x_coord = current_x_coord;
@@ -583,7 +582,7 @@ WIDTH = vinfo.xres;	// nubby
 num++;
 
 	for (y = 0; y < 8; y++)	{	//384
-	
+	*(fbp + ((y) * 49152)) = y;
 //returnv = sendto(sockfd, mesg, 1024, 0, (struct sockaddr *)&cliaddr, len);
 returnv = sendto(sockfd, (fbp + ((y) * 49152)), 49152, 0, (struct sockaddr *)&cliaddr, sizeof(cliaddr));
 
