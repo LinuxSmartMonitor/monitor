@@ -1,5 +1,6 @@
+//***THIS IS WIFI CONNECTION PROGRAM
 
-/*gcc -o p2ptest ./p2p_ui_test_2.c ./p2p_api_test_linux.c -lpthread -I/usr/include/*/
+/*gcc -o p2p_ui_test_2 ./p2p_ui_test_2.c ./p2p_api_test_linux.c -lpthread -I/usr/include/*/
 
 #include "p2p_test.h"
 #include <stdio.h>
@@ -26,137 +27,13 @@
 int sys_return;
 
 void wifi_direct_connect(void);
-
-char *naming_wpsinfo(int wps_info)
-{
-	switch(wps_info)
-	{
-		case P2P_NO_WPSINFO: return ("P2P_NO_WPSINFO");
-		case P2P_GOT_WPSINFO_PEER_DISPLAY_PIN: return ("P2P_GOT_WPSINFO_PEER_DISPLAY_PIN");
-		case P2P_GOT_WPSINFO_SELF_DISPLAY_PIN: return ("P2P_GOT_WPSINFO_SELF_DISPLAY_PIN");
-		case P2P_GOT_WPSINFO_PBC: return ("P2P_GOT_WPSINFO_PBC");
-		default: return ("UI unknown failed");
-	}
-}
-
-char *naming_role(int role)
-{
-	switch(role)
-	{
-		case P2P_ROLE_DISABLE: return ("P2P_ROLE_DISABLE");
-		case P2P_ROLE_DEVICE: return ("P2P_ROLE_DEVICE");
-		case P2P_ROLE_CLIENT: return ("P2P_ROLE_CLIENT");
-		case P2P_ROLE_GO: return ("P2P_ROLE_GO");
-		default: return ("UI unknown failed");
-	}
-}
-
-char *naming_status(int status)
-{
-	switch(status)
-	{
-		case P2P_STATE_NONE: return ("P2P_STATE_NONE");
-		case P2P_STATE_IDLE: return ("P2P_STATE_IDLE");
-		case P2P_STATE_LISTEN: return ("P2P_STATE_LISTEN");
-		case P2P_STATE_SCAN: return ("P2P_STATE_SCAN");
-		case P2P_STATE_FIND_PHASE_LISTEN: return ("P2P_STATE_FIND_PHASE_LISTEN");
-		case P2P_STATE_FIND_PHASE_SEARCH: return ("P2P_STATE_FIND_PHASE_SEARCH");
-		case P2P_STATE_TX_PROVISION_DIS_REQ: return ("P2P_STATE_TX_PROVISION_DIS_REQ");
-		case P2P_STATE_RX_PROVISION_DIS_RSP: return ("P2P_STATE_RX_PROVISION_DIS_RSP");
-		case P2P_STATE_RX_PROVISION_DIS_REQ: return ("P2P_STATE_RX_PROVISION_DIS_REQ");
-		case P2P_STATE_GONEGO_ING: return ("P2P_STATE_GONEGO_ING");
-		case P2P_STATE_GONEGO_OK: return ("P2P_STATE_GONEGO_OK"); //1
-		case P2P_STATE_GONEGO_FAIL: return ("P2P_STATE_GONEGO_FAIL");
-		case P2P_STATE_RECV_INVITE_REQ: return ("P2P_STATE_RECV_INVITE_REQ");
-		case P2P_STATE_PROVISIONING_ING: return ("P2P_STATE_PROVISIONING_ING");
-		case P2P_STATE_PROVISIONING_DONE: return ("P2P_STATE_PROVISIONING_DONE");
-		default: return ("UI unknown failed");
-	}
-}
-
-char* naming_enable(int enable)
-{
-	switch(enable)
-	{
-		case  P2P_ROLE_DISABLE: return ("[Disabled]");
-		case  P2P_ROLE_DEVICE: return ("[Enable/Device]");
-		case  P2P_ROLE_CLIENT: return ("[Enable/Client]");
-		case  P2P_ROLE_GO: return ("[Enable/GO]");
-		default: return ("UI unknown failed");
-	}
-}
-
-void ui_screen(struct p2p *p)
-{
-	p->show_scan_result = 0;
-}
-
-void init_p2p(struct p2p *p)
-{
-	strcpy( p->ifname, "wlan0" );
-	p->enable = P2P_ROLE_DISABLE;
-	p->res = 1;
-	p->res_go = 1;
-	p->status = P2P_STATE_NONE;
-	p->intent = 1;
-	p->wps_info = 0;
-	p->wpsing = 0;
-	p->pin = 12345670;
-	p->role = P2P_ROLE_DISABLE;
-	p->listen_ch = 11;
-	strcpy( p->peer_devaddr, "00:00:00:00:00:00" );
-	p->p2p_get = 0;
-	memset( p->print_line, 0x00, CMD_SZ);
-	p->have_p2p_dev = 0;
-	p->count_line = 0;
-	strcpy( p->peer_ifaddr, "00:00:00:00:00:00" );
-	memset( p->cmd, 0x00, CMD_SZ);
-	p->wpa_open=0;
-	p->ap_open=0;
-	strcpy(p->ok_msg, "WiFi Direct handshake done" );
-	strcpy(p->redo_msg, "Re-do GO handshake" );
-	strcpy(p->fail_msg, "GO handshake unsuccessful" );
-	strcpy(p->nego_msg, "Start P2P negotiation" );
-	strcpy(p->wpa_conf, "./wpa_0_8.conf" );
-	strcpy(p->wpa_path, "./wpa_supplicant" );
-	strcpy(p->wpacli_path, "./wpa_cli" );
-	strcpy(p->ap_conf, "./p2p_hostapd.conf" );
-	strcpy(p->ap_path, "./hostapd" );
-	strcpy(p->apcli_path, "./hostapd_cli" );
-	strcpy(p->scan_msg, "Device haven't enable p2p functionalities" );
-	
-}
-
-void rename_intf(struct p2p *p)
-{
-	FILE *pfin = NULL;
-	FILE *pfout = NULL;
-	
-	pfin = fopen( p->ap_conf, "r" );
-	pfout = fopen( "./p2p_hostapd_temp.conf", "w" );
-	
-	if ( pfin )
-	{
-		while( !feof( pfin ) ){
-			memset(p->parse, 0x00, CMD_SZ);
-			fgets(p->parse, CMD_SZ, pfin);
-			
-			if(strncmp(p->parse, "interface=", 10) == 0)
-			{
-				memset(p->parse, 0x00, CMD_SZ);
-				sprintf( p->parse, "interface=%s\n", p->ifname );
-				fputs( p->parse, pfout );
-			}
-			else
-				fputs(p->parse, pfout);
-		}
-	}
-
-	fclose( pfout );
-	
-	return;
-}
-
+char *naming_wpsinfo(int wps_info);
+char *naming_role(int role);
+char *naming_status(int status);
+char* naming_enable(int enable);
+void ui_screen(struct p2p *p);
+void init_p2p(struct p2p *p);
+void rename_intf(struct p2p *p);
 
 int main(int argc, char **argv)
 {
@@ -311,3 +188,144 @@ void wifi_direct_connect(void)
 	printf("WIFI DIRECT SUCCESS\n");
 
 }
+
+
+char *naming_wpsinfo(int wps_info)
+{
+	switch(wps_info)
+	{
+
+		case P2P_NO_WPSINFO: return ("P2P_NO_WPSINFO");
+		case P2P_GOT_WPSINFO_PEER_DISPLAY_PIN: return ("P2P_GOT_WPSINFO_PEER_DISPLAY_PIN");
+		case P2P_GOT_WPSINFO_SELF_DISPLAY_PIN: return ("P2P_GOT_WPSINFO_SELF_DISPLAY_PIN");
+
+		case P2P_GOT_WPSINFO_PBC: return ("P2P_GOT_WPSINFO_PBC");
+		default: return ("UI unknown failed");
+	}
+}
+
+char *naming_role(int role)
+{
+	switch(role)
+
+	{
+		case P2P_ROLE_DISABLE: return ("P2P_ROLE_DISABLE");
+		case P2P_ROLE_DEVICE: return ("P2P_ROLE_DEVICE");
+
+		case P2P_ROLE_CLIENT: return ("P2P_ROLE_CLIENT");
+		case P2P_ROLE_GO: return ("P2P_ROLE_GO");
+		default: return ("UI unknown failed");
+	}
+
+}
+
+char *naming_status(int status)
+{
+	switch(status)
+	{
+		case P2P_STATE_NONE: return ("P2P_STATE_NONE");
+		case P2P_STATE_IDLE: return ("P2P_STATE_IDLE");
+		case P2P_STATE_LISTEN: return ("P2P_STATE_LISTEN");
+		case P2P_STATE_SCAN: return ("P2P_STATE_SCAN");
+		case P2P_STATE_FIND_PHASE_LISTEN: return ("P2P_STATE_FIND_PHASE_LISTEN");
+		case P2P_STATE_FIND_PHASE_SEARCH: return ("P2P_STATE_FIND_PHASE_SEARCH");
+		case P2P_STATE_TX_PROVISION_DIS_REQ: return ("P2P_STATE_TX_PROVISION_DIS_REQ");
+		case P2P_STATE_RX_PROVISION_DIS_RSP: return ("P2P_STATE_RX_PROVISION_DIS_RSP");
+		case P2P_STATE_RX_PROVISION_DIS_REQ: return ("P2P_STATE_RX_PROVISION_DIS_REQ");
+		case P2P_STATE_GONEGO_ING: return ("P2P_STATE_GONEGO_ING");
+		case P2P_STATE_GONEGO_OK: return ("P2P_STATE_GONEGO_OK"); //1
+		case P2P_STATE_GONEGO_FAIL: return ("P2P_STATE_GONEGO_FAIL");
+		case P2P_STATE_RECV_INVITE_REQ: return ("P2P_STATE_RECV_INVITE_REQ");
+		case P2P_STATE_PROVISIONING_ING: return ("P2P_STATE_PROVISIONING_ING");
+		case P2P_STATE_PROVISIONING_DONE: return ("P2P_STATE_PROVISIONING_DONE");
+		default: return ("UI unknown failed");
+	}
+}
+
+char* naming_enable(int enable)
+{
+
+	switch(enable)
+	{
+		case  P2P_ROLE_DISABLE: return ("[Disabled]");
+		case  P2P_ROLE_DEVICE: return ("[Enable/Device]");
+		case  P2P_ROLE_CLIENT: return ("[Enable/Client]");
+		case  P2P_ROLE_GO: return ("[Enable/GO]");
+		default: return ("UI unknown failed");
+	}
+}
+
+void ui_screen(struct p2p *p)
+{
+	p->show_scan_result = 0;
+}
+
+void init_p2p(struct p2p *p)
+{
+	strcpy( p->ifname, "wlan0" );
+	p->enable = P2P_ROLE_DISABLE;
+	p->res = 1;
+	p->res_go = 1;
+	p->status = P2P_STATE_NONE;
+	p->intent = 1;
+	p->wps_info = 0;
+	p->wpsing = 0;
+	p->pin = 12345670;
+	p->role = P2P_ROLE_DISABLE;
+	p->listen_ch = 11;
+	strcpy( p->peer_devaddr, "00:00:00:00:00:00" );
+	p->p2p_get = 0;
+	memset( p->print_line, 0x00, CMD_SZ);
+	p->have_p2p_dev = 0;
+	p->count_line = 0;
+	strcpy( p->peer_ifaddr, "00:00:00:00:00:00" );
+	memset( p->cmd, 0x00, CMD_SZ);
+	p->wpa_open=0;
+
+	p->ap_open=0;
+	strcpy(p->ok_msg, "WiFi Direct handshake done" );
+	strcpy(p->redo_msg, "Re-do GO handshake" );
+	strcpy(p->fail_msg, "GO handshake unsuccessful" );
+	strcpy(p->nego_msg, "Start P2P negotiation" );
+	strcpy(p->wpa_conf, "./wpa_0_8.conf" );
+	strcpy(p->wpa_path, "./wpa_supplicant" );
+	strcpy(p->wpacli_path, "./wpa_cli" );
+	strcpy(p->ap_conf, "./p2p_hostapd.conf" );
+	strcpy(p->ap_path, "./hostapd" );
+	strcpy(p->apcli_path, "./hostapd_cli" );
+	strcpy(p->scan_msg, "Device haven't enable p2p functionalities" );
+	
+}
+
+void rename_intf(struct p2p *p)
+{
+	FILE *pfin = NULL;
+	FILE *pfout = NULL;
+	
+	pfin = fopen( p->ap_conf, "r" );
+	pfout = fopen( "./p2p_hostapd_temp.conf", "w" );
+	
+	if ( pfin )
+	{
+		while( !feof( pfin ) ){
+			memset(p->parse, 0x00, CMD_SZ);
+			fgets(p->parse, CMD_SZ, pfin);
+			
+			if(strncmp(p->parse, "interface=", 10) == 0)
+			{
+				memset(p->parse, 0x00, CMD_SZ);
+				sprintf( p->parse, "interface=%s\n", p->ifname );
+				fputs( p->parse, pfout );
+			}
+			else
+				fputs(p->parse, pfout);
+		}
+
+	}
+
+	fclose( pfout );
+	
+	return;
+}
+
+
