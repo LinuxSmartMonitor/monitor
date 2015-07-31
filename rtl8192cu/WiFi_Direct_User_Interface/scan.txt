@@ -1,2 +1,16 @@
-wlan0     No scan results
+wlan0     Scan completed :
+          Cell 01 - Address: 26:DB:ED:FF:46:32
+                    ESSID:"DIRECT-x6-\xEA\xB0\xA4\xEB\x9F\xAD\xEC\x8B\x9C\xEB\x85\xB8\xED\x8A\xB83 (SM-N"
+                    Protocol:IEEE 802.11gn
+                    Mode:Master
+                    Frequency:2.412 GHz (Channel 1)
+                    Encryption key:on
+                    Bit Rates:72 Mb/s
+                    Extra:rsn_ie=30140100000fac040100000fac040100000fac020c00
+                    IE: IEEE 802.11i/WPA2 Version 1
+                        Group Cipher : CCMP
+                        Pairwise Ciphers (1) : CCMP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown: DD9F0050F204104A0001101044000102103B0001031047001037E686EB91F65CFB8069DFA84CF9D0191021001353414D53554E475F454C454354524F4E4943531023000E53414D53554E475F4D4F42494C45102400043230313410420008313936393131303110540008000A0050F20400051011001BEAB0A4EB9FADEC8B9CEB85B8ED8AB8332028534D2D4E39303053291008000241081049000600372A000120
+                    Quality=100/100  Signal level=74/100  
 

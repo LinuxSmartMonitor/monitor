@@ -1,12 +1,13 @@
 Selected interface 'wlan0'
-bssid=da:57:ef:d6:b6:4b
-ssid=DIRECT-az-SoraKim.
-id=5
-psk=221d66e492d269d8ebcea84784f746e97dc759cf821663f95aec89a3fb3a9
+bssid=8a:9b:39:f3:a6:3b
+ssid=DIRECT-iC-Bssm (Galaxy S4)
+id=35
+psk=3bdfd94bd563c677578e8fcd5af448736c17f555bd638cff6fa37c281f
 mode=station
 pairwise_cipher=CCMP
 group_cipher=CCMP
 key_mgmt=WPA2-PSK
 wpa_state=COMPLETED
-address=90:9f:33:e9:88:f4
+ip_address=192.168.49.164
+address=90:9f:33:e9:8b:ec
 signal_level=100
