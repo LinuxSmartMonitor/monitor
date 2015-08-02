@@ -31,7 +31,6 @@ void *frameThread(void *arg);
 void *inputThread(void *arg);
 
 void Mouse_one_click(void);	//mouse one click method.
-void Mouse_double_click(void);
 void Mouse_move(int x, int y);
 
 //*** KEYBOARD SECTION *************************
@@ -81,6 +80,7 @@ void *inputThread(void *arg)
 
 	int before_x_coord, before_y_coord;
 	int change_x_coord, change_y_coord;
+	int mouse_i;
 	//############## Mouse Event End 1 ####################
 
 	//************FOR KEYBOARD ************
@@ -165,7 +165,7 @@ void *inputThread(void *arg)
 
 	before_x_coord = 0;
 	before_y_coord = 0;
-	for(i=0; i<50; i++) {
+	for(mouse_i=0; mouse_i<50; mouse_i++) {
 		Mouse_move(-512,-384);
 	}
 
@@ -257,32 +257,18 @@ mouse : 		x coord, 		y coord, 	status
 		// Receive x,y coordinate from Android 
 		current_x_coord = inputdata[0];
 		current_y_coord = inputdata[1];
-		printf("current coord : %d %d",current_x_coord,current_y_coord);
-//		current_x_coord = 512/2;
-//		current_y_coord = 384/2;
-		//change_x_coord = 256/2/2/2/2;
-		//change_y_coord = 192/2/2/2/2;
+		//printf("current coord : %d %d",current_x_coord,current_y_coord);
 		change_x_coord = current_x_coord - before_x_coord;
 		change_y_coord = current_y_coord - before_y_coord;
-//			before_x_coord = 0;
-//			before_y_coord = 0;
-			before_x_coord = current_x_coord;
-			before_y_coord = current_y_coord;
-		printf("\nchange coord : %d %d",change_x_coord,change_y_coord);
-		//mouse_status = 1;	// 1 is one click, 2 is double click
-		mouse_status = inputdata[2];
 
+		before_x_coord = current_x_coord;
+		before_y_coord = current_y_coord;
+		//printf("\nchange coord : %d %d",change_x_coord,change_y_coord);
+		mouse_status = inputdata[2];
 
 		if(mouse_status == 1) {
 			Mouse_move(change_x_coord, change_y_coord);
-//			before_x_coord = current_x_coord;
-	//		before_y_coord = current_y_coord;
 			Mouse_one_click();
-		}else if(mouse_status == 2) {
-			//Mouse_move(current_x_coord, current_y_coord);
-			//before_x_coord = current_x_coord;
-			//before_y_coord = current_y_coord;
-			//Mouse_double_click();
 		}else {
 			printf("Nothing\n");
 		}
@@ -357,14 +343,6 @@ void Mouse_one_click()
 }
 
 //one click + one click = double click
-void Mouse_double_click()
-{
-	Mouse_one_click();
-	Mouse_one_click();
-}
-
-
-
 //############## Mouse Event End 5  ####################
 
 
