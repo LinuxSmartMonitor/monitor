@@ -37,6 +37,7 @@ void Mouse_move(int x, int y);
 //*** KEYBOARD SECTION *************************
 void Key_event(char ch);	//keyboard function
 void Key_shift(char ch);	//keyboard shift
+void Key_input(int key_input);		//keyboard input this
 
 struct input_event ev;		// keyboard_event structure
 struct input_event m_ev;	// ############## Mouse_event structure
@@ -231,7 +232,7 @@ mouse : 		x coord, 		y coord, 	status
 		//Key_event(30);	//a
 		//sleep(1);
 
-		/*&
+		/*
 		Key_event(31);	//s
 
 		Key_event(32);	//d
@@ -251,31 +252,42 @@ mouse : 		x coord, 		y coord, 	status
 		*/
 
 		//############## Mouse Event Start 4 ####################
-		// Receive x,y coordinate from Android 
-		current_x_coord = inputdata[0];
-		current_y_coord = inputdata[1];
-		//current_x_coord = rand()%30;
-		//current_y_coord = rand()%30;
 		
-		current_x_coord = current_x_coord - before_x_coord;
-		current_y_coord = current_y_coord - before_y_coord;
-		//mouse_status = 1;	// 1 is one click, 2 is double click
-		mouse_status = inputdata[2];
-
-
-		if(mouse_status == 1) {
-			Mouse_move(current_x_coord, current_y_coord);
-			before_x_coord = current_x_coord;
-			before_y_coord = current_y_coord;
-			Mouse_one_click();
-		}else if(mouse_status == 2) {
-			Mouse_move(current_x_coord, current_y_coord);
-			before_x_coord = current_x_coord;
-			before_y_coord = current_y_coord;
-			//Mouse_double_click();
-		}else {
-			printf("Nothing\n");
+		if(inputdata[0] == -1)	//This is Keyboard call
+		{
+			Key_input(inputdata[1]);	//Key_input func. call
 		}
+		else if(inputdata[0] != -1)
+		{
+			// Receive x,y coordinate from Android 
+			current_x_coord = inputdata[0];
+			current_y_coord = inputdata[1];
+			//current_x_coord = rand()%30;
+			//current_y_coord = rand()%30;
+		
+			current_x_coord = current_x_coord - before_x_coord;
+			current_y_coord = current_y_coord - before_y_coord;
+			//mouse_status = 1;	// 1 is one click, 2 is double click
+			mouse_status = inputdata[2];
+
+			//병재 if문 안에 넣음 테스트 해줘
+			if(mouse_status == 1) {
+				Mouse_move(current_x_coord, current_y_coord);
+				before_x_coord = current_x_coord;
+				before_y_coord = current_y_coord;
+				Mouse_one_click();
+			}else if(mouse_status == 2) {
+				Mouse_move(current_x_coord, current_y_coord);
+				before_x_coord = current_x_coord;
+				before_y_coord = current_y_coord;
+
+				//Mouse_double_click();
+			} else {
+				//Nothing
+			}
+		}	//else if(inputdata[0] != -1)
+
+
 
 		//############## Mouse Event End 4 ####################
 
@@ -372,6 +384,7 @@ void Key_event(char ch)
 		ev.value = EV_RELEASED;
 		ev.code = ch;
 		write(uinput_fd, &ev, sizeof(struct input_event) );
+		fflush(stdout);
 }
 
 void Key_shift(char ch)
@@ -398,7 +411,21 @@ void Key_shift(char ch)
 		//Release the shift
 		ev.value = EV_RELEASED;
 		ev.code = KEY_LEFTSHIFT;
-		write(uinput_fd, &ev, sizeof(struct input_event) );	
+		write(uinput_fd, &ev, sizeof(struct input_event) );
+
+		fflush(stdout);
+}
+
+void Key_input(int key_input)
+{
+	if(key_input < 300)
+	{
+		Key_event(key_input);
+	}
+	else
+	{
+		Key_shift(key_input - 298);
+	}
 }
 
 
@@ -509,13 +536,12 @@ void *frameThread(void *arg){
 		for (y = 0; y < 8; y++)	{	//384
 		*(fbp + ((y) * 49152)) = y;		
 		returnv = sendto(sockfd, (fbp + ((y) * 49152)), 49152, 0, (struct sockaddr *)&cliaddr, sizeof(cliaddr));
-
-		if(returnv==-1)	{
-			printf("ERROR\n");
-			return 0;
-		}
-	}	//y
-
+		
+			if(returnv==-1)	{
+				printf("ERROR\n");
+				return 0;
+			}
+		}	//y
 	}	//while
 
 }	//frameThread
