@@ -316,7 +316,7 @@ void p2p_scan(struct p2p *p)
 		system( p->cmd );
 
 		p2p_status(p, 0);
-		
+		 
 	}
 	else
 	{

@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 	printf("Wait for some seconds\n");
 	
 	wifi_direct_connect();
-	
+	/*
 	sleep(3);
 	sys_return = system("ifdown wlan0");
 	printf("ifdown : %d\n", sys_return);
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 	printf("ifup : %d\n", sys_return);
 	
 	wifi_direct_connect();
-
+*/
 	return 0;
 
 }	//main
@@ -79,8 +79,8 @@ void wifi_direct_connect(void)
 	struct p2p p2pstruct;
 	struct p2p *p=NULL;
 
-	while(1)
-	{
+//	while(1)
+//	{
 
 	p = &p2pstruct;	
 	if( p != NULL)
@@ -93,22 +93,19 @@ void wifi_direct_connect(void)
 	
 	
 	p->enable=P2P_ROLE_DISABLE;
-	p2p_enable(p);
-	p2p_get_hostapd_conf(p);
+	//p2p_enable(p);
+	p2p_get_hostapd_conf(p); //get hostapd.conf
 	//usleep(50000);  
   	rename_intf(p);
 
-
-
 	ui_screen(p);
 
-	p->show_scan_result = 1;
-	ui_screen(p);
-	//scanf("%d",&p->enable);
+	//p->show_scan_result = 1;
+	//ui_screen(p);
 	p->enable = 1;
 	p2p_enable(p);
-	p->show_scan_result = 1;
-	ui_screen(p);
+	//p->show_scan_result = 1;
+	//ui_screen(p);
 
 
 	p->thread_trigger = THREAD_NONE ;
@@ -120,7 +117,7 @@ void wifi_direct_connect(void)
 	p2p_status(p, 0);
 
 	
-
+/*	
 	if(p->status == P2P_STATE_LISTEN)	{
 		break;
 	}
@@ -143,7 +140,7 @@ void wifi_direct_connect(void)
 		{
 			p->res_go = 1;
 		}
-				
+			
 		p->wpa_open = _FALSE;
 		system("killall wpa_supplicant");
 #ifdef DHCP
@@ -155,16 +152,17 @@ void wifi_direct_connect(void)
 #ifdef DHCP
 		system("killall dhcpd");
 #endif
-		system("clear");
+		system("clear");*/
 
-	}	//while
+//}		//while
 
-	printf("Please Connect Your phone to WIFI DIRECT\n");
-
-
+	usleep(10000);
+	
 	if(p->status != P2P_STATE_GONEGO_OK)
 	{
+		printf("Please Connect Your phone to WIFI DIRECT\n");
 		p2p_set_nego(p);
+		printf("...Negotiationing\n");
 	}
 	else
 	{
@@ -172,11 +170,13 @@ void wifi_direct_connect(void)
 						
 		if( p->role == P2P_ROLE_CLIENT )
 		{
+			printf("==>P2P_ROLE_CLIENT\n");
 			p2p_client_mode(p);
 		
 		}
 		else if( p->role == P2P_ROLE_GO )
 		{
+			printf("==>P2P_ROLE_GO\n");
 			p2p_go_mode(p);
 		}
 	}
