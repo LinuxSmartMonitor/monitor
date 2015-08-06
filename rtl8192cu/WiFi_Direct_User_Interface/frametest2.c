@@ -161,9 +161,6 @@ void *inputThread(void *arg)
 
 	//############## Mouse Event Start 3 ####################
 
-	//ret = ioctl(uinput_fd, UI_SET_EVBIT, EV_KEY);	//Key press and release
-	//ret = ioctl(uinput_fd, UI_SET_EVBIT, EV_SYN);	//relative axis event - mouse
-
 	before_x_coord = 0;
 	before_y_coord = 0;
 	for(mouse_i=0; mouse_i<50; mouse_i++) {
@@ -180,11 +177,13 @@ void *inputThread(void *arg)
 	
 
 	sockfd=socket(PF_INET, SOCK_DGRAM, 0);
+
 	if(-1 == sockfd)
 	{
 		printf("SOCKET FAILED\n");
 		return 0;
 	}
+
 	bzero(&servaddr, sizeof(servaddr));	
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -212,7 +211,7 @@ void *inputThread(void *arg)
 	while(1)
 	{
 		//printf("inputThread\n");
-		printf("recieve : %d\n",recvfrom(sockfd, inputtemp, 3072, 0, (struct sockaddr*)&cliaddr, &client_addr_size));
+		//printf("recieve : %d\n",recvfrom(sockfd, inputtemp, 3072, 0, (struct sockaddr*)&cliaddr, &client_addr_size));
 		inputdata[0] = *(int*)(inputtemp);
 		inputdata[1] = *(int*)(inputtemp+1024);
 		inputdata[2] = *(int*)(inputtemp+2048);
@@ -255,30 +254,11 @@ mouse : 		x coord, 		y coord, 	status
 		*/
 
 		//############## Mouse Event Start 4 ####################
-<<<<<<< HEAD
-		
+		Key_input(30);	//Key_input
+		sleep(2);
 		if(inputdata[0] == -1)	//This is Keyboard call
 		{
 			Key_input(inputdata[1]);	//Key_input func. call
-=======
-		// Receive x,y coordinate from Android 
-		current_x_coord = inputdata[0];
-		current_y_coord = inputdata[1];
-		//printf("current coord : %d %d",current_x_coord,current_y_coord);
-		change_x_coord = current_x_coord - before_x_coord;
-		change_y_coord = current_y_coord - before_y_coord;
-
-		before_x_coord = current_x_coord;
-		before_y_coord = current_y_coord;
-		//printf("\nchange coord : %d %d",change_x_coord,change_y_coord);
-		mouse_status = inputdata[2];
-
-		if(mouse_status == 1) {
-			Mouse_move(change_x_coord, change_y_coord);
-			Mouse_one_click();
-		}else {
-			printf("Nothing\n");
->>>>>>> ef94280437e34110961593805e2d996cd2fae0c6
 		}
 		else if(inputdata[0] != -1)
 		{
@@ -398,6 +378,7 @@ void Key_event(char ch)
 		ev.value = EV_RELEASED;
 		ev.code = ch;
 		write(uinput_fd, &ev, sizeof(struct input_event) );
+		printf("!%d\n", ch);
 		fflush(stdout);
 }
 
@@ -550,22 +531,14 @@ void *frameThread(void *arg){
 		for (y = 0; y < 8; y++)	{	//384
 		*(fbp + ((y) * 49152)) = y;		
 		returnv = sendto(sockfd, (fbp + ((y) * 49152)), 49152, 0, (struct sockaddr *)&cliaddr, sizeof(cliaddr));
-<<<<<<< HEAD
+
 		
 			if(returnv==-1)	{
 				printf("ERROR\n");
 				return 0;
-			}
+			}	//if
 		}	//y
-=======
-		//printf("transmitted %d\n",y);
-		if(returnv==-1)	{
-			printf("ERROR\n");
-			return 0;
-		}
-	}	//y
 
->>>>>>> ef94280437e34110961593805e2d996cd2fae0c6
 	}	//while
 
 }	//frameThread
