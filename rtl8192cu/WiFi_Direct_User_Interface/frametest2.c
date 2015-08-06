@@ -36,6 +36,7 @@ void Mouse_move(int x, int y);
 //*** KEYBOARD SECTION *************************
 void Key_event(char ch);	//keyboard function
 void Key_shift(char ch);	//keyboard shift
+void Key_reserved(void);
 void Key_input(int key_input);		//keyboard input this
 
 struct input_event ev;		// keyboard_event structure
@@ -210,6 +211,7 @@ void *inputThread(void *arg)
 
 	while(1)
 	{
+		//printf("inputThread\n");
 		printf("recieve : %d\n",recvfrom(sockfd, inputtemp, 3072, 0, (struct sockaddr*)&cliaddr, &client_addr_size));
 		inputdata[0] = *(int*)(inputtemp);
 		inputdata[1] = *(int*)(inputtemp+1024);
@@ -250,6 +252,7 @@ mouse : 		x coord, 		y coord, 	status
 		*/
 
 		//############## Mouse Event Start 4 ####################
+
 
 		if(inputdata[0] == -1)	//This is Keyboard call
 		{
@@ -363,6 +366,12 @@ void Mouse_one_click()
 void Key_event(char ch)
 {
 		//Press a key(stuff the keyboard with a keypress)
+		Key_reserved();
+		Key_reserved();
+		Key_reserved();
+		Key_reserved();
+		//
+
 		ev.type = EV_KEY;
 		ev.value = EV_PRESSED;
 		ev.code = ch;
@@ -374,11 +383,31 @@ void Key_event(char ch)
 		ev.code = ch;
 		write(uinput_fd, &ev, sizeof(struct input_event) );
 		printf("!%d\n", ch);
-		fflush(stdout);
 }
+
+void Key_reserved(void)
+{
+		//Press a key(stuff the keyboard with a keypress)
+		ev.type = EV_KEY;
+		ev.value = EV_PRESSED;
+		ev.code = 42;
+		write(uinput_fd, &ev, sizeof(struct input_event) );
+
+		usleep(100000);	//100000us = 100ms = 0.1s delay!!!NO DELETE
+		//Release the key
+		ev.value = EV_RELEASED;
+		ev.code = 42;
+		write(uinput_fd, &ev, sizeof(struct input_event) );
+}
+
 
 void Key_shift(char ch)
 {
+		Key_reserved();
+		Key_reserved();
+		Key_reserved();
+		Key_reserved();
+		//
 		//Shift key
 		ev.type = EV_KEY;
 		ev.value = EV_PRESSED;
@@ -403,7 +432,6 @@ void Key_shift(char ch)
 		ev.code = KEY_LEFTSHIFT;
 		write(uinput_fd, &ev, sizeof(struct input_event) );
 
-		fflush(stdout);
 }
 
 void Key_input(int key_input)
