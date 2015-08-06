@@ -210,8 +210,7 @@ void *inputThread(void *arg)
 
 	while(1)
 	{
-		//printf("inputThread\n");
-		//printf("recieve : %d\n",recvfrom(sockfd, inputtemp, 3072, 0, (struct sockaddr*)&cliaddr, &client_addr_size));
+		printf("recieve : %d\n",recvfrom(sockfd, inputtemp, 3072, 0, (struct sockaddr*)&cliaddr, &client_addr_size));
 		inputdata[0] = *(int*)(inputtemp);
 		inputdata[1] = *(int*)(inputtemp+1024);
 		inputdata[2] = *(int*)(inputtemp+2048);
@@ -230,9 +229,6 @@ mouse : 		x coord, 		y coord, 	status
 			printf("ERROR\n");
 			return 0;
 		}
-
-		//Key_event(30);	//a
-		//sleep(1);
 
 		/*
 		Key_event(31);	//s
@@ -254,8 +250,7 @@ mouse : 		x coord, 		y coord, 	status
 		*/
 
 		//############## Mouse Event Start 4 ####################
-		Key_input(30);	//Key_input
-		sleep(2);
+
 		if(inputdata[0] == -1)	//This is Keyboard call
 		{
 			Key_input(inputdata[1]);	//Key_input func. call
