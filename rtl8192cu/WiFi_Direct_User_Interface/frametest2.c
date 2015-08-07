@@ -79,7 +79,6 @@ void *inputThread(void *arg)
 	//############## Mouse Event Start 1 ####################
 
 	int current_x_coord, current_y_coord, mouse_status;
-
 	int before_x_coord, before_y_coord;
 	int change_x_coord, change_y_coord;
 	int mouse_i;
@@ -263,32 +262,16 @@ mouse : 		x coord, 		y coord, 	status
 			// Receive x,y coordinate from Android 
 			current_x_coord = inputdata[0];
 			current_y_coord = inputdata[1];
-			//current_x_coord = rand()%30;
-			//current_y_coord = rand()%30;
 		
-			current_x_coord = current_x_coord - before_x_coord;
-			current_y_coord = current_y_coord - before_y_coord;
-			//mouse_status = 1;	// 1 is one click, 2 is double click
-			mouse_status = inputdata[2];
-
-			//병재 if문 안에 넣음 테스트 해줘
-			if(mouse_status == 1) {
-				Mouse_move(current_x_coord, current_y_coord);
-				before_x_coord = current_x_coord;
-				before_y_coord = current_y_coord;
-				Mouse_one_click();
-			}else if(mouse_status == 2) {
-				Mouse_move(current_x_coord, current_y_coord);
-				before_x_coord = current_x_coord;
-				before_y_coord = current_y_coord;
-
-				//Mouse_double_click();
-			} else {
-				//Nothing
-			}
+			change_x_coord = current_x_coord - before_x_coord;
+			change_y_coord = current_y_coord - before_y_coord;
+			
+			before_x_coord = current_x_coord;
+			before_y_coord = current_y_coord;
+	
+			Mouse_move(change_x_coord, change_y_coord);
+			Mouse_one_click();
 		}	//else if(inputdata[0] != -1)
-
-
 
 		//############## Mouse Event End 4 ####################
 
