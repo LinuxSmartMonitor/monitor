@@ -36,7 +36,6 @@ void Mouse_move(int x, int y);
 //*** KEYBOARD SECTION *************************
 void Key_event(char ch);	//keyboard function
 void Key_shift(char ch);	//keyboard shift
-void Key_reserved(void);
 void Key_input(int key_input);		//keyboard input this
 
 struct input_event ev;		// keyboard_event structure
@@ -224,31 +223,11 @@ mouse : 		x coord, 		y coord, 	status
 		keyboard : 	-1, 	data, 			-1 
 	*/
 
-
 		if(returnv==-1)
 		{
 			printf("ERROR\n");
 			return 0;
 		}
-
-		/*
-		Key_event(31);	//s
-
-		Key_event(32);	//d
-		Key_event(33);	//f
-
-		Key_shift(30);	//A
-		Key_shift(31);	//S
-		Key_shift(32);	//D
-		Key_shift(33);	//F
-
-		Key_event(122);	//KEY_HANGEUL
-		Key_event(16);	//ㅂ
-		Key_event(17);	//ㅈ
-		Key_event(18);	//ㄷ
-		Key_event(19);	//ㄱ
-		Key_event(122);	//KEY_HANGEUL
-		*/
 
 		//############## Mouse Event Start 4 ####################
 
@@ -342,61 +321,48 @@ void Mouse_one_click()
 		write(uinput_fd, &m_ev, sizeof(struct input_event));
 }
 
-//one click + one click = double click
 //############## Mouse Event End 5  ####################
 
 
 void Key_event(char ch)
 {
-		//Press a key(stuff the keyboard with a keypress)
-		Key_reserved();
-		Key_reserved();
-		Key_reserved();
-		Key_reserved();
-		//
-
 		ev.type = EV_KEY;
 		ev.value = EV_PRESSED;
 		ev.code = ch;
 		write(uinput_fd, &ev, sizeof(struct input_event) );
+		
+		ev.type = EV_SYN;
+		ev.code = SYN_REPORT;
+		ev.value = 0;
+		write(uinput_fd, &ev, sizeof(struct input_event) );	
 
-		usleep(100000);	//100000us = 100ms = 0.1s delay!!!NO DELETE
+		usleep(10000);	//10000us = 10ms
 		//Release the key
+		ev.type = EV_KEY;
 		ev.value = EV_RELEASED;
 		ev.code = ch;
 		write(uinput_fd, &ev, sizeof(struct input_event) );
+		
+		ev.type = EV_SYN;
+		ev.code = SYN_REPORT;
+		ev.value = 0;
+		write(uinput_fd, &ev, sizeof(struct input_event) );
+		
 		printf("!%d\n", ch);
-}
-
-void Key_reserved(void)
-{
-		//Press a key(stuff the keyboard with a keypress)
-		ev.type = EV_KEY;
-		ev.value = EV_PRESSED;
-		ev.code = 42;
-		write(uinput_fd, &ev, sizeof(struct input_event) );
-
-		usleep(100000);	//100000us = 100ms = 0.1s delay!!!NO DELETE
-		//Release the key
-		ev.value = EV_RELEASED;
-		ev.code = 42;
-		write(uinput_fd, &ev, sizeof(struct input_event) );
 }
 
 
 void Key_shift(char ch)
 {
-		Key_reserved();
-		Key_reserved();
-		Key_reserved();
-		Key_reserved();
-		//
-		//Shift key
 		ev.type = EV_KEY;
 		ev.value = EV_PRESSED;
 		ev.code = KEY_LEFTSHIFT;	//KEY_RIGHTSHIFT -> this is shift key
-
 		write(uinput_fd, &ev, sizeof(struct input_event) );
+
+		ev.type = EV_SYN;
+		ev.code = SYN_REPORT;
+		ev.value = 0;
+		write(uinput_fd, &ev, sizeof(struct input_event) );	
 
 		//Press a key(stuff the keyboard with a keypress)
 		ev.type = EV_KEY;
@@ -404,17 +370,32 @@ void Key_shift(char ch)
 		ev.code = ch;
 		write(uinput_fd, &ev, sizeof(struct input_event) );
 
-		usleep(100000);	//100000us = 100ms = 0.1s delay!!!NO DELETE
+		ev.type = EV_SYN;
+		ev.code = SYN_REPORT;
+		ev.value = 0;
+		write(uinput_fd, &ev, sizeof(struct input_event) );	
+
+		usleep(10000);	//10000us = 10ms
+
 		//Release the key
 		ev.value = EV_RELEASED;
 		ev.code = ch;
 		write(uinput_fd, &ev, sizeof(struct input_event) );
+
+		ev.type = EV_SYN;
+		ev.code = SYN_REPORT;
+		ev.value = 0;
+		write(uinput_fd, &ev, sizeof(struct input_event) );	
 
 		//Release the shift
 		ev.value = EV_RELEASED;
 		ev.code = KEY_LEFTSHIFT;
 		write(uinput_fd, &ev, sizeof(struct input_event) );
 
+		ev.type = EV_SYN;
+		ev.code = SYN_REPORT;
+		ev.value = 0;
+		write(uinput_fd, &ev, sizeof(struct input_event) );	
 }
 
 void Key_input(int key_input)
@@ -430,7 +411,7 @@ void Key_input(int key_input)
 }
 
 
-void *frameThread(void *arg){
+void *frameThread(void *arg)	{
 	
 	int WIDTH;	// define nuby;;;
 	int offset = 0;	//framebuffer pointer offset
