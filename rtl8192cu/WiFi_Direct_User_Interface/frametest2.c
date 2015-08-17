@@ -35,14 +35,17 @@ void Mouse_move(int x, int y);
 
 //*** KEYBOARD SECTION *************************
 void Key_event(char ch);	//keyboard function
-void Key_shift(char ch);	//keyboard shift
-void Key_input(int key_input);		//keyboard input this
 
 struct input_event ev;		// keyboard_event structure
 struct input_event m_ev;	// ############## Mouse_event structure
 struct uinput_user_dev uidev;
 
 int uinput_fd;
+
+int shift_flag;
+int ctrl_flag;
+int alt_flag;
+//This flag is check the pressed, released
 
 int main()
 {
@@ -234,7 +237,7 @@ mouse : 		x coord, 		y coord, 	status
 
 		if(inputdata[0] == -1)	//This is Keyboard call
 		{
-			Key_input(inputdata[1]);	//Key_input func. call
+			Key_event(inputdata[1]);	//Key_event call
 		}
 		else if(inputdata[0] != -1)
 		{
@@ -326,88 +329,65 @@ void Mouse_one_click()
 
 void Key_event(char ch)
 {
-		ev.type = EV_KEY;
-		ev.value = EV_PRESSED;
-		ev.code = ch;
-		write(uinput_fd, &ev, sizeof(struct input_event) );
+	int status = 2;	// 0-release, 1-press, 2-all || 2 is init
+
+		if( (ch == KEY_RIGHTCTRL || ch==KEY_LEFTCTRL) && ctrl_flag == 0)		{
+			ctrl_flag = 1;
+			status = 1;	//exec press		
+		}
+		else if( (ch == KEY_RIGHTCTRL || ch == KEY_LEFTCTRL) && ctrl_flag == 1)	{
+			ctrl_flag = 0;
+			status = 0;	//exec release	
+		}
+
+		if( (ch == KEY_RIGHTALT || ch == KEY_LEFTALT) && alt_flag == 0)	{
+			alt_flag = 1;
+			status = 1;
+		}
+		else if( (ch == KEY_RIGHTALT || ch == KEY_LEFTALT) && alt_flag == 1)	{
+			alt_flag = 0;
+			status = 0;
+		}
+
+		if( (ch == KEY_RIGHTSHIFT || ch == KEY_LEFTSHIFT) && shift_flag == 0)	{
+			shift_flag = 1;
+			status = 1;
+		}
+		else if( (ch == KEY_RIGHTSHIFT || ch == KEY_LEFTSHIFT) && shift_flag == 1)	{
+			shift_flag = 0;
+			status = 0;
+		}
+
+
+		if(status == 2 || status == 1)	{
+			//press the key
+			ev.type = EV_KEY;
+			ev.value = EV_PRESSED;
+			ev.code = ch;
+			write(uinput_fd, &ev, sizeof(struct input_event) );
 		
-		ev.type = EV_SYN;
-		ev.code = SYN_REPORT;
-		ev.value = 0;
-		write(uinput_fd, &ev, sizeof(struct input_event) );	
+			ev.type = EV_SYN;
+			ev.code = SYN_REPORT;
+			ev.value = 0;
+			write(uinput_fd, &ev, sizeof(struct input_event) );	
 
-		usleep(10000);	//10000us = 10ms
-		//Release the key
-		ev.type = EV_KEY;
-		ev.value = EV_RELEASED;
-		ev.code = ch;
-		write(uinput_fd, &ev, sizeof(struct input_event) );
+			usleep(5000);	//10000us = 10ms
+		}
+
+		if(status == 2 || status == 0)	{
+			//Release the key
+			usleep(5000);
+
+			ev.type = EV_KEY;
+			ev.value = EV_RELEASED;
+			ev.code = ch;
+			write(uinput_fd, &ev, sizeof(struct input_event) );
 		
-		ev.type = EV_SYN;
-		ev.code = SYN_REPORT;
-		ev.value = 0;
-		write(uinput_fd, &ev, sizeof(struct input_event) );
-		
-		printf("!%d\n", ch);
-}
-
-
-void Key_shift(char ch)
-{
-		ev.type = EV_KEY;
-		ev.value = EV_PRESSED;
-		ev.code = KEY_LEFTSHIFT;	//KEY_RIGHTSHIFT -> this is shift key
-		write(uinput_fd, &ev, sizeof(struct input_event) );
-
-		ev.type = EV_SYN;
-		ev.code = SYN_REPORT;
-		ev.value = 0;
-		write(uinput_fd, &ev, sizeof(struct input_event) );	
-
-		//Press a key(stuff the keyboard with a keypress)
-		ev.type = EV_KEY;
-		ev.value = EV_PRESSED;
-		ev.code = ch;
-		write(uinput_fd, &ev, sizeof(struct input_event) );
-
-		ev.type = EV_SYN;
-		ev.code = SYN_REPORT;
-		ev.value = 0;
-		write(uinput_fd, &ev, sizeof(struct input_event) );	
-
-		usleep(10000);	//10000us = 10ms
-
-		//Release the key
-		ev.value = EV_RELEASED;
-		ev.code = ch;
-		write(uinput_fd, &ev, sizeof(struct input_event) );
-
-		ev.type = EV_SYN;
-		ev.code = SYN_REPORT;
-		ev.value = 0;
-		write(uinput_fd, &ev, sizeof(struct input_event) );	
-
-		//Release the shift
-		ev.value = EV_RELEASED;
-		ev.code = KEY_LEFTSHIFT;
-		write(uinput_fd, &ev, sizeof(struct input_event) );
-
-		ev.type = EV_SYN;
-		ev.code = SYN_REPORT;
-		ev.value = 0;
-		write(uinput_fd, &ev, sizeof(struct input_event) );	
-}
-
-void Key_input(int key_input)
-{
-	if(key_input < 300)
-	{
-		Key_event(key_input);
-	}
-	else
-	{
-		Key_shift(key_input - 298);
-	}
+			ev.type = EV_SYN;
+			ev.code = SYN_REPORT;
+			ev.value = 0;
+			write(uinput_fd, &ev, sizeof(struct input_event) );
+		}
 }
 
 
