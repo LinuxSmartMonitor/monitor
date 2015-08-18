@@ -1,4 +1,5 @@
 #include "pi_input.h"
+#include "pi_onemore.h"
 
 struct uinput_user_dev uidev;
 struct input_event ev;		// keyboard_event structure
@@ -162,8 +163,10 @@ void *inputThread(void *arg)
 mouse : 		x coord, 		y coord, 	status
 		keyboard : 	-1, 	data, 			-1 
 	*/
-
-
+		if(inputdata[0] == 999 && inputdata[1] == 999 && inputdata[2] == 999){
+			printf("    **** Android have exited!\n");
+			onemoretime = 1;
+		}
 		if(returnv==-1)
 		{
 			printf("ERROR\n");

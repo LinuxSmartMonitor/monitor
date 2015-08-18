@@ -201,7 +201,7 @@ void p2p_enable(struct p2p *p)
 #ifdef DHCP
 		system("killall dhcpd");
 #endif
-		system("clear");
+		//system("clear");
 		
 	}
 	else if( p->enable == P2P_ROLE_DEVICE )
@@ -236,15 +236,22 @@ void p2p_enable(struct p2p *p)
 		
 		p->intent = 1;
 		p2p_intent(p);
+		printf("	...Intenting...\n");
 		
 		p2p_set_opch(p, NULL, 0);
+		printf("	...set_opch...\n");
+		
 		usleep(50000);
 		p2p_softap_ssid(p, NULL, 0);
-
+		printf("	...softap ssid...\n");
+		
 		p2p_setDN(p);
+		printf("	...setDN...\n");
+		
 		p2p_role(p, 0);
-
-		p2p_scan(p);
+		//printf("...role...\n");
+		printf("Please Connect Your phone to WIFI DIRECT\n");//p2p_scan(p);
+		//printf("...scan...\n");
 		
 	}
 	else if( p->enable == P2P_ROLE_CLIENT )
@@ -316,7 +323,7 @@ void p2p_scan(struct p2p *p)
 		system( p->cmd );
 
 		p2p_status(p, 0);
-		
+		 
 	}
 	else
 	{
@@ -483,6 +490,8 @@ void p2p_status(struct p2p *p, int flag)
 	system( p->cmd );
 
 	pf = fopen( "./status.txt", "r" );
+	//printf("fopen(status.txt)\n");
+					
 	if ( pf )
 	{
 		while( !feof( pf ) ){
@@ -494,12 +503,15 @@ void p2p_status(struct p2p *p, int flag)
 				if(flag==1){
 					p->p2p_get=1;
 					sprintf( p->print_line, "Status=%s", naming_status(p->status));
+					//printf("Status=%s\n",naming_status(p->status));
+					
 				}
 				break;
 			}	
 		}
 		fclose( pf );
 	}
+	//printf("status finish\n");
 }
 
 void change_hostapd_op_ch(struct p2p *p, int op_ch)

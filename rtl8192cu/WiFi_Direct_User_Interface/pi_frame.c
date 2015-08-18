@@ -1,4 +1,5 @@
 #include "pi_frame.h"
+#include "pi_onemore.h"
 
 void *frameThread(void *arg){
 	
@@ -81,17 +82,17 @@ void *frameThread(void *arg){
 	printf("socket : %s\n", inet_ntoa(servaddr.sin_addr));
 	printf("[Success] OUTPUT Connect Success\n");
 	int num=0;
-
 	int client_addr_size = sizeof(cliaddr);
-	mesg[0]=0;
 	recvfrom(sockfd, mesg, 1, 0, (struct sockaddr*)&cliaddr, &client_addr_size);
+	printf(" ** First Receive !\n");
+				
 	
-
 	while(1)
 	{
 		
 
 		for (y = 0; y < 8; y++)	{	//384
+			
 			*(fbp + ((y) * 49152)) = y;		
 			returnv = sendto(sockfd, (fbp + ((y) * 49152)), 49152, 0, (struct sockaddr *)&cliaddr, sizeof(cliaddr));
 		

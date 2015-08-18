@@ -1,10 +1,11 @@
 //***THIS IS WIFI CONNECTION PROGRAM
 
-/*gcc -o pi_main ./pi_main.c ./pi_p2p_api.c ./pi_input.c ./pi_frame.c -lpthread -I/usr/include/*/
+/*gcc -o pi_main ./pi_main.c ./pi_p2p_api.c ./pi_input.c ./pi_frame.c ./pi_onemore.c -lpthread -I/usr/include/*/
 
 #include "pi_p2p_api.h"
 #include "pi_input.h"
 #include "pi_frame.h"
+#include "pi_onemore.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -62,7 +63,22 @@ int main(int argc, char **argv)
 	pthread_join(thread_num[1], (void **)status);
 
 	printf("Thread finish!\n");
+	while(1)
+	{
+		if(onemoretime == 1)
+		{
+			printf("=== Android has back ! \n");
+			pthread_exit(0);
+	
+			pthread_create(&thread_num[0],NULL, frameThread, NULL); //framebuffer
+			pthread_create(&thread_num[1], NULL, inputThread, NULL);
+		
+			pthread_join(thread_num[0], (void **)status);
+			pthread_join(thread_num[1], (void **)status);
 
+			onemoretime = 0;
+		}
+	}
 	return 0;
 
 }	//main
