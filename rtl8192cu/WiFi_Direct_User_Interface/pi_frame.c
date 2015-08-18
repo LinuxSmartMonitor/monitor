@@ -1,5 +1,4 @@
 #include "pi_frame.h"
-#include "pi_onemore.h"
 
 void *frameThread(void *arg){
 	
@@ -16,11 +15,9 @@ void *frameThread(void *arg){
      char *fbp = 0;
      int y = 0;
 	////////////////////////SOCKET
-	int ipfd,sockfd, n;
-	struct ifreq ifr;
-	struct sockaddr_in servaddr,cliaddr;
-	socklen_t len;
-	char mesg[1000];
+	int frsockfd,n;
+	char haddr[100];
+	struct sockaddr_in server_addr;
 	
 	int returnv;
 
@@ -61,31 +58,27 @@ void *frameThread(void *arg){
      	}
 
   	 printf("The framebuffer device was mapped to memory successfully.\n");
-	sockfd=socket(PF_INET, SOCK_DGRAM, 0);
 
-	if(sockfd == -1)
-	{
-		printf("SOCKET FAILED\n");
-		return 0;
-	}
-	bzero(&servaddr, sizeof(servaddr));	
-	servaddr.sin_family = PF_INET;
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	servaddr.sin_port = htons(3490);
+	strcpy(haddr, "192.168.49.1");
 
-	inet_pton(PF_INET, ipaddr ,&servaddr.sin_addr);
-	if(-1 == bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)))
+	if((frsockfd=socket(AF_INET, SOCK_DGRAM, 0))<0)
 	{
-		printf("BIND ERROR\n");
-		return 0;
+		printf("SOCKET ERROR\n");
+		exit(0);
 	}
-	printf("socket : %s\n", inet_ntoa(servaddr.sin_addr));
-	printf("[Success] OUTPUT Connect Success\n");
-	int num=0;
-	int client_addr_size = sizeof(cliaddr);
-	recvfrom(sockfd, mesg, 1, 0, (struct sockaddr*)&cliaddr, &client_addr_size);
-	printf(" ** First Receive !\n");
-				
+	bzero((char*)&server_addr, sizeof(server_addr));
+
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = inet_addr(haddr);
+	server_addr.sin_port = htons(3490);
+/*
+	if(connect(frsockfd, (struct sockaddr *)&server_addr, sizeof(server_addr))<0)
+	{
+		printf("CONNECT ERROR\n");
+		exit(0);
+	}
+	printf("CONNECT SUCCESS! \n");
+		*/		
 	
 	while(1)
 	{
@@ -94,8 +87,9 @@ void *frameThread(void *arg){
 		for (y = 0; y < 8; y++)	{	//384
 			
 			*(fbp + ((y) * 49152)) = y;		
-			returnv = sendto(sockfd, (fbp + ((y) * 49152)), 49152, 0, (struct sockaddr *)&cliaddr, sizeof(cliaddr));
-		
+			sendto(frsockfd, (fbp + ((y) * 49152)), 49152, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
+			//write(frsockfd, (fbp + ((y) * 49152)), 49152);
+			
 		}	//y
 
 	}	//while

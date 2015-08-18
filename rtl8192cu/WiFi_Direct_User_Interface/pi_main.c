@@ -6,7 +6,6 @@
 #include "pi_input.h"
 #include "pi_frame.h"
 #include "pi_onemore.h"
-
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -41,7 +40,7 @@ void rename_intf(struct p2p *p);
 
 int main(int argc, char **argv)
 {
-
+	int returnvalue;
 	
 /************ Wifi Direct Connection *********************/
 
@@ -60,22 +59,17 @@ int main(int argc, char **argv)
 	pthread_create(&thread_num[1], NULL, inputThread, NULL);
 
 	pthread_join(thread_num[0], (void **)status);
-	pthread_join(thread_num[1], (void **)status);
-
+	returnvalue=pthread_join(thread_num[1], (void **)status);
+	
 	printf("Thread finish!\n");
 	while(1)
 	{
-		if(onemoretime == 1)
+		if(onemoretime == -99)
 		{
-			printf("=== Android has back ! \n");
-			pthread_exit(0);
-	
-			pthread_create(&thread_num[0],NULL, frameThread, NULL); //framebuffer
+			pthread_cancel(thread_num[1]);
+			printf("Android has exit!\n");
 			pthread_create(&thread_num[1], NULL, inputThread, NULL);
-		
-			pthread_join(thread_num[0], (void **)status);
 			pthread_join(thread_num[1], (void **)status);
-
 			onemoretime = 0;
 		}
 	}

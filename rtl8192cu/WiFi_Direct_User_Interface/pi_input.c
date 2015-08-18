@@ -15,10 +15,10 @@ int alt_flag;
 void *inputThread(void *arg)
 {
 ////////////////////////SOCKET
-	int ipfd,sockfd, n;
-	struct ifreq ifr;
-	struct sockaddr_in servaddr,cliaddr;
-
+	int frsockfd,n;
+	char haddr[100];
+	struct sockaddr_in server_addr;
+	
 	socklen_t len;
 	char mesg[1000];
 
@@ -117,42 +117,37 @@ void *inputThread(void *arg)
 
 	//############## Mouse Event End 3 ####################
 
+strcpy(haddr, "192.168.49.1");
 
-	sockfd=socket(PF_INET, SOCK_DGRAM, 0);
-
-	if(-1 == sockfd)
+	if((frsockfd=socket(PF_INET, SOCK_STREAM, 0))<0)
 	{
-		printf("SOCKET FAILED\n");
-		return 0;
+		printf("SOCKET ERROR\n");
+		exit(0);
 	}
+	bzero((char*)&server_addr, sizeof(server_addr));
 
-	bzero(&servaddr, sizeof(servaddr));	
-	servaddr.sin_family = PF_INET;
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	servaddr.sin_port = htons(3491);
-
-	inet_pton(PF_INET, ipaddr ,&servaddr.sin_addr);
-
-	if(-1 == bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)))
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = inet_addr(haddr);
+	server_addr.sin_port = htons(3491);
+	if(connect(frsockfd, (struct sockaddr *)&server_addr, sizeof(server_addr))<0)
 	{
-		printf("BIND ERROR\n");
-
-		return 0;
+		printf("CONNECT ERROR\n");
+		exit(0);
 	}
-	printf("socket : %s\n", inet_ntoa(servaddr.sin_addr));
-
 	printf("[Success] INPUT Connect Success\n");
 	int num=0;
 	
 
-	int client_addr_size = sizeof(cliaddr);
 	char inputtemp[3072];
 	int inputdata[3];
-	
+	int serverlen = sizeof(server_addr);
 
 	while(1)
 	{
-		recvfrom(sockfd, inputtemp, 3072, 0, (struct sockaddr*)&cliaddr, &client_addr_size);
+		if(recvfrom(frsockfd, inputtemp, 3072, 0, (struct sockaddr*)&server_addr, &serverlen)<0)
+		{
+			onemoretime = -99;
+		}
 		inputdata[0] = *(int*)(inputtemp);
 		inputdata[1] = *(int*)(inputtemp+1024);
 		inputdata[2] = *(int*)(inputtemp+2048);
@@ -163,10 +158,7 @@ void *inputThread(void *arg)
 mouse : 		x coord, 		y coord, 	status
 		keyboard : 	-1, 	data, 			-1 
 	*/
-		if(inputdata[0] == 999 && inputdata[1] == 999 && inputdata[2] == 999){
-			printf("    **** Android have exited!\n");
-			onemoretime = 1;
-		}
+	
 		if(returnv==-1)
 		{
 			printf("ERROR\n");
