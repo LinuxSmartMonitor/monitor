@@ -112,7 +112,7 @@ void *inputThread(void *arg)
 
 	before_x_coord = 0;
 	before_y_coord = 0;
-	for(mouse_i=0; mouse_i<50; mouse_i++) {
+	for(mouse_i=0; mouse_i<1; mouse_i++) {
 		Mouse_move(-512,-384);
 	}
 
@@ -145,10 +145,8 @@ strcpy(haddr, "192.168.49.1");
 
 	while(1)
 	{
-		if(recvfrom(frsockfd, inputtemp, 3072, 0, (struct sockaddr*)&server_addr, &serverlen)<0)
-		{
-			onemoretime = -99;
-		}
+		recvfrom(frsockfd, inputtemp, 3072, 0, (struct sockaddr*)&server_addr, &serverlen);
+		
 		inputdata[0] = *(int*)(inputtemp);
 		inputdata[1] = *(int*)(inputtemp+1024);
 		inputdata[2] = *(int*)(inputtemp+2048);
@@ -171,7 +169,7 @@ mouse : 		x coord, 		y coord, 	status
 
 		if(inputdata[0] == -1)	//This is Keyboard call
 		{
-			Key_event(inputdata[1]);	//Key_event call
+			Key_input(inputdata[1]);	//Key_event call
 		}
 		else if(inputdata[0] != -1)
 		{
@@ -259,6 +257,69 @@ void Mouse_one_click()
 }
 
 //############## Mouse Event End 5  ####################
+
+void Key_input(char ch)
+{
+	if(ch < 300)	{
+		Key_event(ch);
+	}
+	else	{
+		Key_shift(ch);
+	}
+}
+
+
+void Key_shift(char ch)
+{
+		//press the shift
+		ev.type = EV_KEY;
+		ev.value = EV_PRESSED;
+		ev.code = KEY_RIGHTSHIFT;
+		write(uinput_fd, &ev, sizeof(struct input_event) );
+		
+		ev.type = EV_SYN;
+		ev.code = SYN_REPORT;
+		ev.value = 0;
+		write(uinput_fd, &ev, sizeof(struct input_event) );	
+
+		usleep(10000);	//10000us = 10ms
+
+		//press the key
+		ev.type = EV_KEY;
+		ev.value = EV_PRESSED;
+		ev.code = ch;
+		write(uinput_fd, &ev, sizeof(struct input_event) );
+		
+		ev.type = EV_SYN;
+		ev.code = SYN_REPORT;
+		ev.value = 0;
+		write(uinput_fd, &ev, sizeof(struct input_event) );	
+
+		usleep(10000);	//10000us = 10ms
+
+		//Release the key
+		ev.type = EV_KEY;
+		ev.value = EV_RELEASED;
+		ev.code = ch;
+		write(uinput_fd, &ev, sizeof(struct input_event) );
+		
+		ev.type = EV_SYN;
+		ev.code = SYN_REPORT;
+		ev.value = 0;
+		write(uinput_fd, &ev, sizeof(struct input_event) );
+
+
+		//Release the shift
+		ev.type = EV_KEY;
+		ev.value = EV_RELEASED;
+		ev.code = KEY_RIGHTSHIFT;
+		write(uinput_fd, &ev, sizeof(struct input_event) );
+		
+		ev.type = EV_SYN;
+		ev.code = SYN_REPORT;
+		ev.value = 0;
+		write(uinput_fd, &ev, sizeof(struct input_event) );
+}
 
 
 void Key_event(char ch)

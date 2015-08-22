@@ -30,5 +30,7 @@ void Mouse_move(int x, int y);
 
 //*** KEYBOARD SECTION *************************
 void Key_event(char ch);	//keyboard function
+void Key_shift(char ch);
+void Key_input(char ch);
 
 void *inputThread(void *arg);
