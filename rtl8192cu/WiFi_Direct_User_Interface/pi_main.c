@@ -1,4 +1,4 @@
-//***THIS IS WIFI CONNECTION PROGRAM
+////***THIS IS WIFI CONNECTION PROGRAM
 
 /*gcc -o pi_main ./pi_main.c ./pi_p2p_api.c ./pi_input.c ./pi_frame.c ./pi_onemore.c -lpthread -I/usr/include/*/
 
