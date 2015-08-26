@@ -118,9 +118,23 @@ void *inputThread(void *arg)
 
 	//############## Mouse Event End 3 ####################
 
-strcpy(haddr, "192.168.49.1");
 
-	if((frsockfd=socket(PF_INET, SOCK_STREAM, 0))<0)
+	int ipfd;
+	struct ifreq ifr;
+	ipfd= socket(PF_INET, SOCK_DGRAM, 0);
+	ifr.ifr_addr.sa_family = PF_INET;
+	strncpy(ifr.ifr_name, "wlan0", IFNAMSIZ-1);
+	ioctl(ipfd, SIOCGIFADDR, &ifr);
+	close(ipfd);
+
+	strcpy(ipaddr, inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr));
+
+	printf(" ==> ip : %s\n",ipaddr);
+
+
+	strcpy(haddr, ipaddr);
+
+	if((frsockfd=socket(AF_INET, SOCK_DGRAM, 0))<0)
 	{
 		printf("SOCKET ERROR\n");
 		exit(0);
@@ -130,11 +144,18 @@ strcpy(haddr, "192.168.49.1");
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = inet_addr(haddr);
 	server_addr.sin_port = htons(3491);
+	if(bind(frsockfd,(struct sockaddr *)&server_addr,sizeof(server_addr))<0)
+	{
+
+		printf("Input:bind error\n");
+		exit(0);
+	}
+/*
 	if(connect(frsockfd, (struct sockaddr *)&server_addr, sizeof(server_addr))<0)
 	{
 		printf("CONNECT ERROR\n");
 		exit(0);
-	}
+	}*/
 	printf("[Success] INPUT Connect Success\n");
 	int num=0;
 	
@@ -142,7 +163,6 @@ strcpy(haddr, "192.168.49.1");
 	char inputtemp[3072];
 	int inputdata[3];
 	int serverlen = sizeof(server_addr);
-
 	while(1)
 	{
 		recvfrom(frsockfd, inputtemp, 3072, 0, (struct sockaddr*)&server_addr, &serverlen);
