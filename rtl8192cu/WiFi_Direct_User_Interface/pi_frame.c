@@ -1,6 +1,6 @@
 //15082650826508265082650826
 #include "pi_frame.h"
- 
+
 void *frameThread(void *arg){
 	
 	int WIDTH;	// define nuby;;;
@@ -23,9 +23,9 @@ void *frameThread(void *arg){
 	int returnv;
 
 /*********************************FRAMEBUFFER*********************/
- 
+
      // Open the file for reading and writing
-     fbfd = open("/dev/fb1", O_RDWR);
+     fbfd = open("/dev/fb0", O_RDWR);
      if (fbfd == -1) {
          perror("Error: cannot open framebuffer device");
          exit(1);
@@ -80,14 +80,30 @@ void *frameThread(void *arg){
 	}
 	printf("CONNECT SUCCESS! \n");
 		*/		
+	int ipfd;
+	struct ifreq ifr;
+	ipfd= socket(PF_INET, SOCK_DGRAM, 0);
+	ifr.ifr_addr.sa_family = PF_INET;
+	strncpy(ifr.ifr_name, "wlan0", IFNAMSIZ-1);
+	ioctl(ipfd, SIOCGIFADDR, &ifr);
+	close(ipfd);
+
+	strcpy(ipaddr, inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr));
+
 	
+	char im[2];
+	im[0] = 0;
+	int serverlen;
+	int op = 50;
+	usleep(50000);
+	sendto(frsockfd, ipaddr, 100, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
+	printf(" Send to  ==> ip : %s\n",ipaddr);
+
 	while(1)
 	{
-		
-
 		for (y = 0; y < 8; y++)	{	//384
 			
-			*(fbp + ((y) * 49152)) = y;		
+			*(fbp + ((y) * 49152)) = y+10;		
 			sendto(frsockfd, (fbp + ((y) * 49152)), 49152, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
 			//write(frsockfd, (fbp + ((y) * 49152)), 49152);
 			

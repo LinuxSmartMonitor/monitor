@@ -129,7 +129,7 @@ void *inputThread(void *arg)
 
 	strcpy(ipaddr, inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr));
 
-	printf(" ==> ip : %s\n",ipaddr);
+	printf(" ==> Input ip : %s\n",ipaddr);
 
 
 	strcpy(haddr, ipaddr);
@@ -163,10 +163,15 @@ void *inputThread(void *arg)
 	char inputtemp[3072];
 	int inputdata[3];
 	int serverlen = sizeof(server_addr);
+	char mesge[1];
+	mesge[0] = 'a';
 	while(1)
 	{
+		//sendto(frsockfd, mesge, 1, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
+			
 		recvfrom(frsockfd, inputtemp, 3072, 0, (struct sockaddr*)&server_addr, &serverlen);
-		
+	printf("InputReceive : %d %d %d\n",inputdata[0],inputdata[1],inputdata[2]);
+ 
 		inputdata[0] = *(int*)(inputtemp);
 		inputdata[1] = *(int*)(inputtemp+1024);
 		inputdata[2] = *(int*)(inputtemp+2048);

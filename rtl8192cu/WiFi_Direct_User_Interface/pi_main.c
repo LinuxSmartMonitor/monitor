@@ -1,7 +1,7 @@
 ////***THIS IS WIFI CONNECTION PROGRAM
 
 /*gcc -o pi_main ./pi_main.c ./pi_p2p_api.c ./pi_input.c ./pi_frame.c ./pi_onemore.c -lpthread -I/usr/include/*/
- 
+
 #include "pi_p2p_api.h"
 #include "pi_input.h"
 #include "pi_frame.h"
@@ -38,9 +38,11 @@ void ui_screen(struct p2p *p);
 void init_p2p(struct p2p *p);
 void rename_intf(struct p2p *p);
 
+pthread_t thread_num[2];
 int main(int argc, char **argv)
 {
 	int returnvalue;
+	int status;
 	
 /************ Wifi Direct Connection *********************/
 
@@ -48,31 +50,25 @@ int main(int argc, char **argv)
 	
 	
 	wifi_direct_connect();	
+	pthread_create(&thread_num[1], NULL, inputThread, NULL);
 	
+	/********* Want to get IP address, you should be wait!*/
+   /* because it takes a little bit time ****/
+	printf("WIFI DIRECT SUCCESS, Wait 2sec...\n");
 	
+	sleep(2);
+
 	printf("Thread start!\n");
 
-	pthread_t thread_num[2];
-	int status;
 	
 	pthread_create(&thread_num[0],NULL, frameThread, NULL); //framebuffer
-	pthread_create(&thread_num[1], NULL, inputThread, NULL);
-
-	pthread_join(thread_num[0], (void **)status);
-	returnvalue=pthread_join(thread_num[1], (void **)status);
+	
+	//pthread_join(thread_num[0], (void **)status);
+	pthread_join(thread_num[1], (void **)status);
 	
 	printf("Thread finish!\n");
-	while(1)
-	{
-		if(onemoretime == -99)
-		{
-			pthread_cancel(thread_num[1]);
-			printf("Android has exit!\n");
-			pthread_create(&thread_num[1], NULL, inputThread, NULL);
-			pthread_join(thread_num[1], (void **)status);
-			onemoretime = 0;
-		}
-	}
+
+
 	return 0;
 
 }	//main
@@ -166,25 +162,6 @@ void wifi_direct_connect()
 	
 	system("dhclient wlan0");
 	
-	/********* Want to get IP address, you should be wait!*/
-   /* because it takes a little bit time ****/
-	printf("WIFI DIRECT SUCCESS, Wait 2sec...\n");
-	sleep(2);
-
-	
-	ipfd= socket(PF_INET, SOCK_DGRAM, 0);
-	ifr.ifr_addr.sa_family = PF_INET;
-	strncpy(ifr.ifr_name, "wlan0", IFNAMSIZ-1);
-	ioctl(ipfd, SIOCGIFADDR, &ifr);
-	close(ipfd);
-	
-
-	sockfd=socket(PF_INET, SOCK_DGRAM, 0);
-
-	
-	strcpy(ipaddr, inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr));
-
-	printf(" ==> ip : %s\n",ipaddr);
 
 }
 
