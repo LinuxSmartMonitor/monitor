@@ -1,6 +1,6 @@
 //15082650826508265082650826
 #include "pi_frame.h"
-
+ 
 void *frameThread(void *arg){
 	
 	int WIDTH;	// define nuby;;;
@@ -23,7 +23,7 @@ void *frameThread(void *arg){
 	int returnv;
 
 /*********************************FRAMEBUFFER*********************/
-
+ 
      // Open the file for reading and writing
      fbfd = open("/dev/fb1", O_RDWR);
      if (fbfd == -1) {
