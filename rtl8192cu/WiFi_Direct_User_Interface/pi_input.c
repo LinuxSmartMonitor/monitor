@@ -112,7 +112,7 @@ void *inputThread(void *arg)
 
 	before_x_coord = 0;
 	before_y_coord = 0;
-	for(mouse_i=0; mouse_i<1; mouse_i++) {
+	for(mouse_i=0; mouse_i<50; mouse_i++) {
 		Mouse_move(-512,-384);
 	}
 
@@ -283,18 +283,18 @@ void Mouse_one_click()
 
 //############## Mouse Event End 5  ####################
 
-void Key_input(char ch)
+void Key_input(int ch)
 {
 	if(ch < 300)	{
 		Key_event(ch);
 	}
 	else	{
-		Key_shift(ch);
-	}
+		Key_shift(ch - 298);
+	}	//Key_shift is -298!!!
 }
 
 
-void Key_shift(char ch)
+void Key_shift(int ch)
 {
 		//press the shift
 		ev.type = EV_KEY;
@@ -347,7 +347,7 @@ void Key_shift(char ch)
 }
 
 
-void Key_event(char ch)
+void Key_event(int ch)
 {
 	int status = 2;	// 0-release, 1-press, 2-all || 2 is init
 

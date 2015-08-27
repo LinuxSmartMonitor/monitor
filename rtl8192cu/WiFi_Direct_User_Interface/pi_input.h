@@ -29,8 +29,8 @@ void Mouse_one_click(void);	//mouse one click method.
 void Mouse_move(int x, int y);
 
 //*** KEYBOARD SECTION *************************
-void Key_event(char ch);	//keyboard function
-void Key_shift(char ch);
-void Key_input(char ch);
+void Key_event(int ch);	//keyboard function
+void Key_shift(int ch);
+void Key_input(int ch);
 
 void *inputThread(void *arg);
