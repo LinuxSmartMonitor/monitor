@@ -1,0 +1,7 @@
+@lxpanel --profile LXDE
+@pcmanfm --desktop --profile LXDE
+@xscreensaver -no-splash
+@sudo -s
+@/home/pi/monitor/install/fb0_final
+@lxterminal
+@/home/pi/monitor/install/kb_autostart
