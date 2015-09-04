@@ -25,7 +25,7 @@ void *frameThread(void *arg){
 /*********************************FRAMEBUFFER*********************/
 
      // Open the file for reading and writing
-     fbfd = open("/dev/fb0", O_RDWR);
+     fbfd = open("/dev/fb1", O_RDWR);
      if (fbfd == -1) {
          perror("Error: cannot open framebuffer device");
          exit(1);
@@ -103,7 +103,7 @@ void *frameThread(void *arg){
 	{
 		for (y = 0; y < 8; y++)	{	//384
 			
-			*(fbp + ((y) * 49152)) = y+10;		
+			*(fbp + ((y) * 49152)) = y;		
 			sendto(frsockfd, (fbp + ((y) * 49152)), 49152, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
 			//write(frsockfd, (fbp + ((y) * 49152)), 49152);
 			

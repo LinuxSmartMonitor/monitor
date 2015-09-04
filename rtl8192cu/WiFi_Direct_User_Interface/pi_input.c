@@ -170,7 +170,7 @@ void *inputThread(void *arg)
 		//sendto(frsockfd, mesge, 1, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
 			
 		recvfrom(frsockfd, inputtemp, 3072, 0, (struct sockaddr*)&server_addr, &serverlen);
-	printf("InputReceive : %d %d %d\n",inputdata[0],inputdata[1],inputdata[2]);
+	//printf("InputReceive : %d %d %d\n",inputdata[0],inputdata[1],inputdata[2]);
  
 		inputdata[0] = *(int*)(inputtemp);
 		inputdata[1] = *(int*)(inputtemp+1024);
